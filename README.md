@@ -92,4 +92,5 @@ Never type a price into copy: use the values in `src/data/services.ts`, so the s
 - missing Riot disclaimers (footer, work grid, case studies), beta versions, the Teams billing line and the required project wording;
 - prices without the VAT wording;
 - third-party origins, raster images on pages and red-coral colour values;
+- scroll-driven animations broken by minification (a scroll timeline folded into the `animation` shorthand, which browsers reject);
 - missing or over-length titles and descriptions, missing canonical, hreflang or Open Graph tags, and invalid JSON-LD.

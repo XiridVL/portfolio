@@ -84,6 +84,14 @@ const VSTATS_ALLOWED = new Set([
 const CORAL_RE = /:\s*coral\b|#(?:ff4655|fd4556|ff7f50|ff5a5f)\b|rgb\(\s*255[ ,]+70[ ,]+85\b/gi;
 const SELF = 'scripts/compliance-check.mjs';
 
+/**
+ * Scroll-driven motion: a scroll or view timeline inside the `animation`
+ * shorthand (`animation: x linear both view()`) is invalid CSS, so browsers drop
+ * the whole declaration and the animation never runs. Some minifiers produce it
+ * from a valid shorthand + `animation-timeline` pair.
+ */
+const FOLDED_TIMELINE_RE = /animation:[^;{}]*(?:\bview\(|\bscroll\(|\s--[\w-]+)/g;
+
 /** §16 Riot disclaimer lines. */
 const DISCLAIMER = {
   siteEn: 'VALORANT and Riot Games are trademarks of Riot Games, Inc.',
@@ -225,6 +233,7 @@ async function checkDist(vatApplies) {
     for (const m of raw.matchAll(INTERNAL_RE)) fail('internal detail', where, `"${m[0]}"`);
     for (const m of raw.matchAll(CORAL_RE)) fail('red-coral accent', where, `"${m[0]}"`);
     if (ext === '.css' || ext === '.html') checkThirdParty(raw, where, siteHost);
+    if (ext === '.css' || ext === '.html') for (const m of raw.matchAll(FOLDED_TIMELINE_RE)) fail('broken scroll animation', where, `"${m[0].slice(0, 80)}"`);
     if (ext === '.html') checkPage(name, raw, where, vatApplies);
   }
 }
