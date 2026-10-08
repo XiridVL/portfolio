@@ -79,6 +79,23 @@ const onHome = key === 'home';
 </html>
 
 <script>
+  // scroll-fallback: where scroll timelines are missing, BaseHead set .sd-js;
+  // play each element's entrance once as it comes into view (global.css).
+  if (document.documentElement.classList.contains('sd-js')) {
+    (window as Window & { __sdFallback?: boolean }).__sdFallback = true;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          entry.target.classList.add('sd-in');
+          io.unobserve(entry.target);
+        }
+      },
+      { rootMargin: '0px 0px -10% 0px' },
+    );
+    document.querySelectorAll('.sd-rise, .sd-blur, .sd-scale, .sd-tilt, .sd-lit').forEach((el) => io.observe(el));
+  }
+
   // card-glow: keep --mx/--my at the mouse position on [data-glow] elements
   // (read by the .glow-card highlight in global.css). Mouse only; touch has no hover.
   document.addEventListener(

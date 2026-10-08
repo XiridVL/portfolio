@@ -44,6 +44,13 @@ const otherLocale: Locale = locale === 'en' ? 'it' : 'en';
 const image = absoluteUrl(ogImage ?? ogImagePath(locale, routeKey ?? 'home'));
 const ldBlocks = jsonLd === undefined ? [] : Array.isArray(jsonLd) ? jsonLd : [jsonLd];
 
+// scroll-fallback init: browsers without CSS scroll timelines (Firefox, older
+// Safari) get .sd-js before first paint, so the entrance start states apply at
+// once; BaseLayout's script then plays each entrance as it comes into view.
+// If that script has not run within 2.5s, the class is removed and everything
+// simply shows. Reduced motion never gets the class.
+const scrollFallbackInit = `try{var d=document.documentElement;if(!CSS.supports('animation-timeline:view()')&&'IntersectionObserver'in window&&!matchMedia('(prefers-reduced-motion: reduce)').matches){d.classList.add('sd-js');setTimeout(function(){if(!window.__sdFallback)d.classList.remove('sd-js')},2500)}}catch(e){}`;
+
 ---
 
 <meta charset="utf-8" />
@@ -55,6 +62,7 @@ const ldBlocks = jsonLd === undefined ? [] : Array.isArray(jsonLd) ? jsonLd : [j
 
 <meta name="theme-color" content="#121212" />
 <meta name="color-scheme" content="dark" />
+<script is:inline set:html={scrollFallbackInit} />
 
 <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
 <link rel="icon" href={withBase('/favicon-32.png')} type="image/png" sizes="32x32" />
