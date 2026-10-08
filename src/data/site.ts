@@ -12,9 +12,8 @@ export const site = {
   /** Domain once chosen; production URL comes from SITE_URL (or Render's own URL) at build time. */
   domain: 'andrea-capelli-portfolio.onrender.com',
 
-  // TODO(launch blocker): add the P.IVA (Italian VAT number). The footer renders
-  // "P.IVA <number>" only when this is a non-empty string.
-  vatNumber: '' as string,
+  /** P.IVA (Italian VAT number). The footer and privacy pages render "P.IVA <number>" when this is set. */
+  vatNumber: '04885990400' as string,
   // TODO(launch blocker): add the full business address (shown on the privacy pages).
   businessAddress: '' as string,
 

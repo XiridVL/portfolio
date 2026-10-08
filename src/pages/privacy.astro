@@ -23,8 +23,7 @@ const hostPrivacy = 'https://render.com/privacy';
     <div class="prose privacy__body ld-fade" style="--i: 2">
       <h2>Who is responsible</h2>
       <p>
-        Andrea Capelli, freelance web developer, Rimini, Italy. Contact: <a href={mailto}>{site.email}</a>.
-        {legal}
+        Andrea Capelli, freelance web developer, Rimini, Italy. Contact: <a href={mailto}>{site.email}</a>.{legal && ` ${legal}`}
       </p>
 
       <h2>No cookies, no tracking</h2>

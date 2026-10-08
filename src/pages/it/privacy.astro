@@ -23,8 +23,7 @@ const hostPrivacy = 'https://render.com/privacy';
     <div class="prose privacy__body ld-fade" style="--i: 2">
       <h2>Titolare del trattamento</h2>
       <p>
-        Andrea Capelli, sviluppatore web freelance, Rimini, Italia. Contatto: <a href={mailto}>{site.email}</a>.
-        {legal}
+        Andrea Capelli, sviluppatore web freelance, Rimini, Italia. Contatto: <a href={mailto}>{site.email}</a>.{legal && ` ${legal}`}
       </p>
 
       <h2>Nessun cookie, nessun tracciamento</h2>

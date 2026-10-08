@@ -34,6 +34,7 @@ export function professionalServiceLd(locale: Locale) {
     url: absoluteUrl(routes.home[locale]),
     provider: { '@id': personId() },
     areaServed: ['Rimini', 'Emilia-Romagna', 'Italy', 'European Union'],
+    ...(site.vatNumber && { vatID: `IT${site.vatNumber}` }),
     priceRange: '€€',
     hasOfferCatalog: {
       '@type': 'OfferCatalog',
