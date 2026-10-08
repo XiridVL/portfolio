@@ -23,11 +23,6 @@ export const en = {
   lang: {
     groupLabel: 'Language',
   },
-  theme: {
-    system: 'Theme: system. Switch to light',
-    light: 'Theme: light. Switch to dark',
-    dark: 'Theme: dark. Use system setting',
-  },
   mobileCta: {
     quote: 'Get a free quote',
     email: 'Email Andrea',

@@ -1,13 +1,14 @@
 ---
 /**
- * Standard section opening: horizon rule + mono label, H2, optional intro.
- * The H2 gets `id="{id}-title"` so the <section> can use aria-labelledby.
+ * Standard section opening: eyebrow pill ("01 · WORK"), H2 with an optional
+ * italic serif accent word, optional intro. Each part rises in as it scrolls
+ * into view. The H2 gets `id="{id}-title"` so the <section> can use aria-labelledby.
  *
  *   <section id="work" class="section" aria-labelledby="work-title">
  *     <div class="container">
- *       <SectionHeader id="work" number="01" label="WORK" title="Real products, live or in beta" intro="…" />
+ *       <SectionHeader id="work" number="01" label="WORK" title="Real products, live or in beta" accent="live" intro="…" />
  */
-import HorizonRule from './HorizonRule.astro';
+import AccentText from './AccentText.astro';
 
 interface Props {
   /** Section id; H2 id becomes `${id}-title`. */
@@ -15,23 +16,61 @@ interface Props {
   number?: string;
   label?: string;
   title: string;
+  /** Word or phrase of `title` set in italic serif. */
+  accent?: string;
   intro?: string;
-  /** Visually hide the heading (e.g. Soundings "Proof in numbers."). */
+  align?: 'start' | 'center';
+  /** Visually hide the heading (e.g. "Proof in numbers."). */
   hideTitle?: boolean;
   class?: string;
 }
-const { id, number, label, title, intro, hideTitle = false, class: className } = Astro.props;
+const { id, number, label, title, accent, intro, align = 'start', hideTitle = false, class: className } = Astro.props;
 ---
 
-<header class:list={['section-header', className]}>
-  {(label || number) && <HorizonRule number={number} label={label} />}
-  <h2 id={`${id}-title`} class:list={{ 'visually-hidden': hideTitle }}>{title}</h2>
-  {intro && <p class="section-header__intro lead">{intro}</p>}
+<header class:list={['section-header', `section-header--${align}`, className]}>
+  {
+    (label || number) && (
+      <p class="section-header__eyebrow sd-rise">
+        {number && <span class="section-header__num">{number}</span>}
+        {number && label && <span class="section-header__sep" aria-hidden="true" />}
+        {label && <span>{label}</span>}
+      </p>
+    )
+  }
+  <h2 id={`${id}-title`} class:list={['section-header__title', { 'visually-hidden': hideTitle, 'sd-blur': !hideTitle }]} style="--i: 1">
+    <AccentText text={title} accent={accent} />
+  </h2>
+  {intro && <p class="section-header__intro lead sd-rise" style="--i: 2">{intro}</p>}
   <slot />
 </header>
 
 <style>
-  .section-header { margin-bottom: var(--s-7); }
-  .section-header h2 { margin-top: var(--s-6); max-width: 22ch; }
-  .section-header__intro { margin-top: var(--s-4); color: var(--muted); }
+  .section-header { margin-bottom: clamp(var(--s-7), 6vw, var(--s-9)); }
+  .section-header--center { text-align: center; }
+  .section-header--center .section-header__title,
+  .section-header--center .section-header__intro { margin-inline: auto; }
+
+  .section-header__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-height: 30px;
+    padding: 4px 14px 4px 12px;
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-pill);
+    background: rgb(242 239 232 / .03);
+    color: var(--muted);
+    font-size: var(--step--2);
+    font-weight: 560;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    line-height: 1.4;
+    font-variant-numeric: tabular-nums;
+  }
+  .section-header__num { color: var(--accent); }
+  .section-header__sep { width: 3px; height: 3px; border-radius: 50%; background: var(--faint); }
+
+  .section-header__title { margin-top: var(--s-5); max-width: 18ch; }
+  .section-header__eyebrow + .section-header__title.visually-hidden + .section-header__intro { margin-top: var(--s-5); }
+  .section-header__intro { margin-top: var(--s-5); }
 </style>

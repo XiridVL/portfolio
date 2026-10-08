@@ -1,12 +1,13 @@
 ---
 /**
- * Mobile navigation (<960px): a trigger button plus a modal <dialog> sheet.
+ * Mobile navigation (<960px): a 44px icon trigger (two lines that fold into
+ * an ×) plus a full-screen glass <dialog> sheet. Links stagger in on open.
  * Focus is trapped inside while open, Esc closes it (native), and focus
  * returns to the trigger on close. Following a link closes the sheet.
  * Rendered by Header; not meant to be used directly.
  */
+import Monogram from './Monogram.astro';
 import LangSwitch from './LangSwitch.astro';
-import ThemeToggle from './ThemeToggle.astro';
 import Button from './Button.astro';
 import { useStrings, type Locale, type RouteKey } from '../i18n';
 
@@ -28,27 +29,23 @@ const t = useStrings(locale);
   aria-expanded="false"
   aria-controls="mobile-menu"
 >
-  <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-    <path d="M2 6h16M2 14h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
-  </svg>
-  <span class="mobile-menu__trigger-text">{t.header.menuOpen}</span>
+  <span class="mobile-menu__icon" aria-hidden="true"></span>
+  <span class="visually-hidden">{t.header.menuOpen}</span>
 </button>
 
 <dialog id="mobile-menu" class="mobile-menu" aria-label={t.header.menuOpen} data-menu>
   <div class="mobile-menu__top">
-    <span class="label muted">{t.header.wordmark}</span>
-    <button type="button" class="mobile-menu__close" data-menu-close>
-      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-        <path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
-      </svg>
-      <span>{t.header.menuClose}</span>
+    <Monogram variant="lockup" size={26} />
+    <button type="button" class="mobile-menu__trigger mobile-menu__close" data-menu-close>
+      <span class="mobile-menu__icon" aria-hidden="true"></span>
+      <span class="visually-hidden">{t.header.menuClose}</span>
     </button>
   </div>
   <nav aria-label={t.header.navLabel}>
     <ul role="list" class="mobile-menu__list">
       {
-        items.map((item) => (
-          <li>
+        items.map((item, i) => (
+          <li style={`--i: ${i}`}>
             <a href={item.href} data-nav-link={item.anchor} data-menu-link>
               {item.label}
             </a>
@@ -57,11 +54,10 @@ const t = useStrings(locale);
       }
     </ul>
   </nav>
-  <div class="mobile-menu__tools">
+  <div class="mobile-menu__foot" style={`--i: ${items.length}`}>
     <LangSwitch locale={locale} routeKey={routeKey} />
-    <ThemeToggle locale={locale} />
+    <Button href={ctaHref} size="lg" arrow="right" class="mobile-menu__cta" data-menu-link>{t.header.cta}</Button>
   </div>
-  <Button href={ctaHref} size="lg" arrow="right" class="mobile-menu__cta" data-menu-link>{t.header.cta}</Button>
 </dialog>
 
 <script>
@@ -124,75 +120,112 @@ const t = useStrings(locale);
 </script>
 
 <style>
-  .mobile-menu__trigger,
-  .mobile-menu__close {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--s-2);
-    min-height: 44px;
-    min-width: 44px;
-    padding: 0 var(--s-3);
-    border: 1px solid var(--line);
-    border-radius: var(--r-btn);
+  /* ---- Trigger / close: 44px icon buttons ---- */
+  .mobile-menu__trigger {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    margin-inline-end: -10px; /* optically align the lines with the gutter */
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
     background: none;
     color: var(--ink);
-    font-weight: 600;
+    transition: background-color var(--dur-1);
   }
-  .mobile-menu__trigger:hover,
-  .mobile-menu__close:hover { background: var(--surface-2); }
+  .mobile-menu__trigger:hover { background: rgb(242 239 232 / .07); }
   @media (min-width: 960px) {
-    .mobile-menu__trigger { display: none; }
+    [data-menu-open] { display: none; }
   }
-  /* Very narrow screens (and user text spacing): icon only, the label stays as the accessible name. */
-  @media (max-width: 359px) {
-    .mobile-menu__trigger { padding: 0; justify-content: center; }
-    .mobile-menu__trigger-text {
-      position: absolute;
-      width: 1px; height: 1px;
-      margin: -1px;
-      overflow: hidden;
-      clip-path: inset(50%);
-      white-space: nowrap;
-    }
+  /* Two 18px lines, 7px apart; they fold into an × while expanded (--x: 1). */
+  .mobile-menu__icon { position: relative; width: 18px; height: 8px; }
+  .mobile-menu__icon::before,
+  .mobile-menu__icon::after {
+    content: "";
+    position: absolute;
+    inset: calc(50% - 0.75px) 0 auto;
+    height: 1.5px;
+    border-radius: 1px;
+    background: currentColor;
+    transform: translateY(calc((1 - var(--x, 0)) * var(--y))) rotate(calc(var(--x, 0) * var(--r)));
+    transition: transform var(--dur-2) var(--ease-out);
   }
+  .mobile-menu__icon::before { --y: -3.5px; --r: 45deg; }
+  .mobile-menu__icon::after { --y: 3.5px; --r: -45deg; }
+  [aria-expanded='true'],
+  .mobile-menu__close { --x: 1; }
 
+  /* ---- Sheet ---- */
   .mobile-menu {
+    position: fixed;
+    inset: 0;
     width: 100%;
-    max-width: 100%;
+    max-width: none;
     height: 100dvh;
-    max-height: 100dvh;
+    max-height: none;
     margin: 0;
-    padding: var(--s-4) var(--gutter) var(--s-6);
+    padding: 0 var(--gutter) calc(var(--s-6) + env(safe-area-inset-bottom));
     border: 0;
-    background: var(--bg);
+    background: rgb(18 18 18 / .9);
+    -webkit-backdrop-filter: saturate(180%) blur(24px);
+    backdrop-filter: saturate(180%) blur(24px);
     color: var(--ink);
     flex-direction: column;
-    gap: var(--s-5);
     overflow-y: auto;
+    overscroll-behavior: contain;
+    opacity: 0;
   }
-  .mobile-menu[open] { display: flex; }
-  .mobile-menu::backdrop { background: rgb(14 26 31 / .4); }
+  .mobile-menu[open] { display: flex; opacity: 1; }
+  .mobile-menu::backdrop { background: none; }
+
+  /* Mirrors the header bar, so the lines fold into the × in the same spot. */
   .mobile-menu__top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-bottom: var(--s-3);
-    border-bottom: 1.5px solid var(--horizon);
+    flex: none;
+    height: var(--header-h);
+    padding-top: calc(var(--header-h) - var(--header-h-compact));
   }
-  .mobile-menu__list { list-style: none; padding: 0; }
+  :global(.is-scrolled) .mobile-menu__top { height: var(--header-h-compact); padding-top: 0; }
+
+  .mobile-menu__list { margin-top: var(--s-6); }
+  .mobile-menu__list li + li { border-top: 1px solid var(--line); }
   .mobile-menu__list a {
     display: flex;
     align-items: center;
-    min-height: 56px;
-    border-bottom: 1px solid var(--line);
+    gap: var(--s-3);
+    min-height: 64px;
     color: var(--ink);
-    text-decoration: none;
-    font-family: var(--font-display);
-    font-weight: 650;
     font-size: var(--step-3);
+    font-weight: 640;
+    letter-spacing: -0.03em;
+    text-decoration: none;
   }
-  .mobile-menu__list a:hover { color: var(--sea); }
-  .mobile-menu__tools { display: flex; align-items: center; justify-content: space-between; }
-  .mobile-menu :global(.mobile-menu__cta) { width: 100%; margin-top: auto; }
+  .mobile-menu__list a:hover { color: var(--accent-hover); }
+  /* Section in view: the same clay dot as the desktop nav. */
+  .mobile-menu__list .is-active::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+  .mobile-menu__foot { display: grid; gap: var(--s-4); justify-items: start; margin-top: auto; padding-top: var(--s-7); }
+  .mobile-menu__foot :global(.mobile-menu__cta) { width: 100%; }
   :global(html.has-open-menu) { overflow: hidden; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* Fade the sheet in and out (the exit needs allow-discrete; without it the sheet simply closes). */
+    .mobile-menu { transition: opacity var(--dur-2), display var(--dur-2) allow-discrete, overlay var(--dur-2) allow-discrete; }
+    @starting-style {
+      .mobile-menu[open] { opacity: 0; }
+    }
+    [open] li,
+    [open] .mobile-menu__foot { animation: menu-in 700ms var(--ease-out) calc(var(--i) * 45ms + 60ms) both; }
+    [open] .mobile-menu__close .mobile-menu__icon::before,
+    [open] .mobile-menu__close .mobile-menu__icon::after { animation: menu-x 520ms var(--ease-out) 80ms both; }
+    @keyframes menu-in {
+      from { opacity: 0; transform: translateY(20px); }
+    }
+    @keyframes menu-x {
+      from { transform: translateY(var(--y)) rotate(0deg); }
+    }
+  }
 </style>

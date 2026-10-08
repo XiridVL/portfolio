@@ -10,17 +10,17 @@ const mailto = `mailto:${site.email}`;
 const legal = [site.vatNumber && `P.IVA ${site.vatNumber}.`, site.businessAddress && `${site.businessAddress}.`]
   .filter(Boolean)
   .join(' ');
-const githubPrivacy = 'https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement';
+const hostPrivacy = 'https://render.com/privacy';
 ---
 
 <BaseLayout title={meta.title} description={meta.description} locale="en" routeKey="privacy">
   <article class="privacy section container container--reading">
     <header class="privacy__header">
-      <h1>Privacy</h1>
-      <p class="eyebrow">Last updated: <time datetime="2026-10">October 2026</time></p>
+      <h1 class="privacy__title ld-rise">Privacy</h1>
+      <p class="eyebrow ld-rise" style="--i: 1">Last updated: <time datetime="2026-10">October 2026</time></p>
     </header>
 
-    <div class="prose">
+    <div class="prose privacy__body ld-fade" style="--i: 2">
       <h2>Who is responsible</h2>
       <p>
         Andrea Capelli, freelance web developer, Rimini, Italy. Contact: <a href={mailto}>{site.email}</a>.
@@ -35,14 +35,14 @@ const githubPrivacy = 'https://docs.github.com/en/site-policy/privacy-policies/g
 
       <h2>Preferences on your device</h2>
       <p>
-        If you choose a theme or language, that choice is saved in your browser's local storage so the site remembers
+        If you choose a language, that choice is saved in your browser's local storage so the site remembers
         it. It never leaves your device, and you can clear it in your browser settings.
       </p>
 
       <h2>Hosting</h2>
       <p>
-        This site is hosted on GitHub Pages. GitHub may process technical data such as your IP address to deliver the
-        site and keep it secure. See <ExternalLink href={githubPrivacy} locale="en">GitHub's privacy statement</ExternalLink>.
+        This site is hosted on Render. Render may process technical data such as your IP address to deliver the site
+        and keep it secure. See <ExternalLink href={hostPrivacy} locale="en">Render's privacy policy</ExternalLink>.
       </p>
 
       <h2>When you email me</h2>
@@ -64,16 +64,25 @@ const githubPrivacy = 'https://docs.github.com/en/site-policy/privacy-policies/g
 </BaseLayout>
 
 <style>
+  /* Reading column (centred at the measure): big tight title, hairline-separated sections. */
+  .privacy > * { max-width: var(--measure); margin-inline: auto; }
   .privacy__header {
     display: grid;
-    gap: var(--s-3);
-    padding-block-end: var(--s-6);
-    margin-block-end: var(--s-6);
-    border-block-end: 1.5px solid var(--horizon);
+    gap: var(--s-4);
+    padding-block-end: var(--s-7);
+    margin-block-end: var(--s-7);
+    border-block-end: 1px solid var(--line-2);
   }
+  .privacy__title { font-size: var(--step-5); letter-spacing: -0.045em; line-height: 1; }
+  .privacy__body { line-height: 1.7; }
   .privacy .prose h2 {
-    margin-block-start: var(--s-6);
+    margin-block-start: var(--s-7);
+    padding-block-start: var(--s-7);
+    border-block-start: 1px solid var(--line);
     font-size: var(--step-2);
+    font-weight: 640;
+    letter-spacing: -0.022em;
   }
-  .privacy .prose h2:first-child { margin-block-start: 0; }
+  .privacy .prose h2:first-child { margin-block-start: 0; padding-block-start: 0; border: 0; }
+  .privacy .prose h2 + p { margin-block-start: var(--s-4); }
 </style>

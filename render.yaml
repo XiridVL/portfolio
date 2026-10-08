@@ -1,0 +1,45 @@
+# Render Blueprint: the portfolio as a static site on Render's global CDN.
+#
+# Setup (once): push this repository to GitHub, then in the Render Dashboard
+# choose New > Blueprint and select the repository. Render creates the service
+# below and deploys the default branch.
+#
+# Deploys wait for the GitHub Actions checks (.github/workflows/ci.yml: type
+# check, compliance, links, Lighthouse budgets) to pass on the commit. The build
+# itself also runs the link and compliance checks on the exact output it ships,
+# so a failing check stops the deploy.
+services:
+  - type: web
+    runtime: static
+    name: andrea-capelli-portfolio
+    buildCommand: npm ci && npm run build && npm run check:links && npm run check:compliance
+    staticPublishPath: ./dist
+    autoDeployTrigger: checksPass
+    envVars:
+      # Canonical origin for canonical/hreflang/Open Graph/JSON-LD/robots/sitemap.
+      # Leave unset to use the service's onrender.com URL (RENDER_EXTERNAL_URL);
+      # set it to https://your-domain once a custom domain is attached.
+      # - key: SITE_URL
+      #   value: https://andreacapelli.dev
+      - key: BASE_PATH
+        value: /
+    headers:
+      # Hashed build assets (CSS, JS, fonts) never change under the same name.
+      - path: /_astro/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=(), payment=()
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=31536000

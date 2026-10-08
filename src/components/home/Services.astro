@@ -1,7 +1,9 @@
 ---
 /**
- * Services and prices (#services, spec §3.4 / §4.4): six package cards
- * (3×2 from 1240px, 2×3 from 768px), the custom quote panel and the rates band.
+ * Services and prices (#services): six package cards in a bento grid (3 columns
+ * from 1100px, 2 from 700px), the custom quote feature panel and the rates band.
+ * Cards rise in as they scroll into view, staggered by column; their inner rows
+ * line up across each grid row through subgrid.
  */
 import SectionHeader from '../SectionHeader.astro';
 import ServiceCard from '../ServiceCard.astro';
@@ -20,40 +22,35 @@ const copy = homeCopy[locale].services;
 
 <section id="services" class="section" aria-labelledby="services-title">
   <div class="container">
-    <SectionHeader id="services" number={copy.number} label={copy.label} title={copy.title} intro={copy.intro} />
+    <SectionHeader id="services" number={copy.number} label={copy.label} title={copy.title} accent={copy.accent} intro={copy.intro} />
     <ul class="services-grid" role="list">
       {
-        services.map((service) => (
-          <li class="services-grid__item">
+        services.map((service, i) => (
+          <li class="services-grid__item sd-rise" style={`--c2: ${i % 2}; --c3: ${i % 3}`}>
             <ServiceCard service={service} locale={locale} />
           </li>
         ))
       }
     </ul>
-    <div class="services-extra">
-      <CustomQuotePanel locale={locale} />
-      <RatesBand locale={locale} />
-    </div>
+    <CustomQuotePanel locale={locale} />
+    <RatesBand locale={locale} />
   </div>
 </section>
 
 <style>
   .services-grid {
     display: grid;
-    gap: var(--s-5);
+    gap: 20px;
     grid-template-columns: minmax(0, 1fr);
   }
-  @media (min-width: 768px) {
+  /* Each item spans the card's six rows, so heads, prices and actions line up across a row. */
+  .services-grid__item { --i: 0; display: grid; grid-row: span 6; grid-template-rows: subgrid; row-gap: 0; }
+  @media (min-width: 700px) {
     .services-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .services-grid__item { --i: var(--c2); }
   }
-  @media (min-width: 1240px) {
+  @media (min-width: 1100px) {
     .services-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  }
-  .services-grid__item { display: flex; }
-  .services-grid__item > :global(*) { flex: 1; }
-  .services-extra {
-    display: grid;
-    gap: var(--s-7);
-    margin-top: var(--s-7);
+    .services-grid__item { --i: var(--c3); }
   }
 </style>

@@ -1,8 +1,9 @@
 ---
 /**
- * Large email link + Copy button. Announces "Email address copied" in its own
- * aria-live region; if the Clipboard API fails it selects the address and says
- * "Press Ctrl+C to copy".
+ * The email address as a large link, plus a small glass "Copy" pill whose
+ * icon turns into a check for a moment once copied. Announces "Email address
+ * copied" in its own aria-live region; if the Clipboard API fails it selects
+ * the address and says "Press Ctrl+C to copy".
  */
 import { site } from '../data/site';
 import { useStrings, type Locale } from '../i18n';
@@ -19,6 +20,10 @@ const t = useStrings(locale).copyEmail;
 <div class:list={['copy-email', className]} data-copy-email>
   <a class="copy-email__link" href={`mailto:${email}`} data-copy-email-text>{email}</a>
   <button type="button" class="copy-email__button" data-copy-email-button data-copied={t.copied} data-fallback={t.fallback}>
+    <svg class="copy-email__icon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <g class="copy-email__copy"><rect x="5.25" y="5.25" width="8.5" height="8.5" rx="2"></rect><path d="M10.5 2.75H4.75a2 2 0 0 0-2 2v5.75"></path></g>
+      <path class="copy-email__check" d="M3 8.5l3.25 3.25L13 5"></path>
+    </svg>
     {t.button}
   </button>
   <p class="copy-email__status" aria-live="polite" data-copy-email-status></p>
@@ -30,11 +35,16 @@ const t = useStrings(locale).copyEmail;
     const text = root.querySelector<HTMLElement>('[data-copy-email-text]');
     const status = root.querySelector<HTMLElement>('[data-copy-email-status]');
     if (!button || !text || !status) return;
+    let timer = 0;
     button.addEventListener('click', async () => {
       const value = text.textContent?.trim() ?? '';
       try {
         await navigator.clipboard.writeText(value);
         status.textContent = button.dataset.copied ?? '';
+        // Show the check on the button for a moment.
+        root.classList.add('is-copied');
+        clearTimeout(timer);
+        timer = window.setTimeout(() => root.classList.remove('is-copied'), 2400);
       } catch {
         const range = document.createRange();
         range.selectNodeContents(text);
@@ -48,24 +58,55 @@ const t = useStrings(locale).copyEmail;
 </script>
 
 <style>
-  .copy-email { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-4); }
+  .copy-email { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-4); }
   .copy-email__link {
-    font-family: var(--font-display);
-    font-weight: 650;
-    font-size: var(--step-3);
+    color: var(--ink);
+    font-size: clamp(1.5rem, 1.25rem + 0.9vw, 2rem);
+    font-weight: 600;
+    letter-spacing: -0.025em;
     line-height: 1.2;
     overflow-wrap: anywhere;
+    text-decoration: underline 1px transparent;
+    text-underline-offset: 0.22em;
+    transition: text-decoration-color var(--dur-2);
   }
+  .copy-email__link:hover { color: var(--ink); text-decoration-color: var(--accent); }
+
   .copy-email__button {
-    min-height: 44px;
-    min-width: 44px;
-    padding: 0 var(--s-4);
-    border: 1.5px solid var(--sea);
-    border-radius: var(--r-btn);
-    background: none;
-    color: var(--sea);
-    font-weight: 600;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 0 14px 0 12px;
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-pill);
+    background: rgb(242 239 232 / .05);
+    color: var(--ink);
+    font-size: var(--step--1);
+    font-weight: 560;
+    transition: background-color var(--dur-1), transform var(--dur-2) var(--ease-out);
   }
-  .copy-email__button:hover { background: var(--surface-2); color: var(--ink); }
-  .copy-email__status { flex-basis: 100%; min-height: 1.6em; font-size: var(--step--1); color: var(--muted); }
+  /* 44px hit area around the 34px pill. */
+  .copy-email__button::after { content: ""; position: absolute; inset: -5px 0; }
+  .copy-email__button:hover { background: rgb(242 239 232 / .1); }
+  .copy-email__button:active { transform: scale(0.96); }
+
+  /* Copy icon and check share one box and cross-fade. */
+  .copy-email__icon > * { transform-origin: 50% 50%; transition: opacity var(--dur-2), transform var(--dur-2) var(--ease-out); }
+  .copy-email__check,
+  .is-copied .copy-email__copy { opacity: 0; transform: scale(0.6); }
+  .copy-email__check { stroke: var(--ok); }
+  .is-copied .copy-email__check { opacity: 1; transform: none; }
+
+  /* The status line hangs just under the row, out of flow: it reserves no gap
+     and appearing never shifts anything. One 20px line fits in the 24px gap
+     the Contact column leaves below. */
+  .copy-email__status {
+    position: absolute;
+    inset: calc(100% + 2px) 0 auto;
+    font-size: var(--step--1);
+    line-height: 1.4;
+    color: var(--muted);
+  }
 </style>

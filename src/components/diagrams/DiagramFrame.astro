@@ -1,6 +1,7 @@
 ---
 /**
- * Shared shell for the case-study diagrams (spec §11).
+ * Shared shell for the case-study diagrams (spec §11): one big rounded panel
+ * with a faint dot-grid canvas on top and the numbered text equivalent below.
  *
  * Renders two inline SVGs from the same steps: a wide layout and a tall one
  * for narrow screens (toggled by a media query, so only one is ever in the
@@ -25,7 +26,7 @@ interface Props {
 const { id, title, desc, steps, wideViewBox, tallViewBox, class: className } = Astro.props;
 ---
 
-<div class:list={['diagram', className]}>
+<div class:list={['diagram', 'sd-scale', className]}>
   <div class="diagram__canvas">
     <svg
       class="diagram__svg diagram__svg--wide"
@@ -54,7 +55,7 @@ const { id, title, desc, steps, wideViewBox, tallViewBox, class: className } = A
     {
       steps.map((step, i) => (
         <li class="diagram__step" data-step={i + 1} tabindex="0">
-          <span class="diagram__num mono" aria-hidden="true">{i + 1}</span>
+          <span class="diagram__num" aria-hidden="true">{i + 1}</span>
           <span>{step}</span>
         </li>
       ))
@@ -65,100 +66,122 @@ const { id, title, desc, steps, wideViewBox, tallViewBox, class: className } = A
 <style>
   .diagram {
     --diagram-bg: var(--surface);
-  }
-  .diagram__canvas {
-    padding: var(--s-5) var(--s-4);
     background: var(--diagram-bg);
     border: 1px solid var(--line);
-    border-top: 1.5px solid var(--horizon);
-    border-radius: 0 0 var(--r-card) var(--r-card);
-    color: var(--ink);
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+  }
+  .diagram__canvas {
+    position: relative;
+    padding: clamp(var(--s-5), 5vw, var(--s-8)) clamp(var(--s-3), 5vw, var(--s-8));
+    color: var(--line-strong);
+  }
+  /* Faint dot grid, fading out toward the panel edges. */
+  .diagram__canvas::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, rgb(242 239 232 / .07) 1.2px, transparent 1.8px) 50% 50% / 24px 24px;
+    -webkit-mask-image: radial-gradient(ellipse 75% 70% at 50% 50%, #000 40%, transparent 100%);
+    mask-image: radial-gradient(ellipse 75% 70% at 50% 50%, #000 40%, transparent 100%);
+    pointer-events: none;
   }
   .diagram__svg {
+    position: relative;
     display: block;
     width: 100%;
     height: auto;
     overflow: visible;
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
+    font-weight: 500;
+    letter-spacing: -0.005em;
   }
-  /* Font sizes are in user units; both layouts keep labels at 12px or more on screen. */
+  /* Font sizes are in user units; both layouts keep labels near 12px or more on screen. */
   .diagram__svg--wide { font-size: 16px; }
   .diagram__svg--tall { font-size: 13px; max-width: 460px; margin-inline: auto; display: none; }
   @media (max-width: 899px) {
     .diagram__svg--wide { display: none; }
     .diagram__svg--tall { display: block; }
-    .diagram__canvas { padding-inline: var(--s-3); }
   }
 
   /* drawing primitives */
-  .diagram :global(.d-box) { fill: var(--diagram-bg); stroke: currentColor; stroke-width: 1.5; }
-  .diagram :global(.d-box--quiet) { stroke: var(--line-strong); stroke-width: 1; }
-  .diagram :global(.d-box--dashed) { stroke-dasharray: 6 5; }
-  .diagram :global(.d-fill) { fill: var(--sea); stroke: none; }
-  .diagram :global(.d-rule) { stroke: var(--line-strong); stroke-width: 1; fill: none; }
+  .diagram :global(.d-box) { fill: var(--surface-2); stroke: var(--line-2); stroke-width: 1; }
+  .diagram :global(.d-box--quiet) { fill: var(--diagram-bg); stroke: var(--line); }
+  .diagram :global(.d-box--dashed) { stroke: var(--line-strong); stroke-dasharray: 5 5; }
+  .diagram :global(.d-fill) { fill: var(--accent); stroke: none; }
+  .diagram :global(.d-rule) { stroke: var(--line-strong); stroke-opacity: .55; stroke-width: 1; fill: none; }
   .diagram :global(.d-rule--dashed) { stroke-dasharray: 3 5; }
-  .diagram :global(.d-line) { fill: none; stroke: currentColor; stroke-width: 1.5; }
-  .diagram :global(.d-line--dashed) { stroke-dasharray: 6 5; }
+  .diagram :global(.d-line) { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; }
+  .diagram :global(.d-line--dashed) { stroke-dasharray: 5 6; }
   .diagram :global(.d-head) { fill: currentColor; stroke: none; }
-  .diagram :global(.d-label) { fill: var(--ink); stroke: none; font-weight: 400; }
+  .diagram :global(.d-label) { fill: var(--text); stroke: none; }
   .diagram :global(.d-label--halo) {
     paint-order: stroke;
     stroke: var(--diagram-bg);
-    stroke-width: 5px;
+    stroke-width: 6px;
     stroke-linejoin: round;
   }
   .diagram :global(.d-muted) { fill: var(--muted); }
   .diagram :global(.d-strike) { stroke: var(--muted); stroke-width: 1.5; }
-  .diagram :global(.d-badge circle) { fill: var(--diagram-bg); stroke: var(--sea); stroke-width: 1.5; }
-  .diagram :global(.d-badge text) { fill: var(--sea); stroke: none; font-weight: 400; font-size: 0.875em; }
+  .diagram :global(.d-badge circle) { fill: color-mix(in srgb, var(--accent) 14%, var(--diagram-bg)); stroke: var(--accent); stroke-width: 1; }
+  .diagram :global(.d-badge text) { fill: var(--accent); stroke: none; font-weight: 640; font-size: 0.8125em; }
   .diagram :global(.d-step) { cursor: default; }
 
   /* active step (diagram-link) */
-  .diagram :global([data-step] .d-line),
-  .diagram :global([data-step] .d-box),
-  .diagram :global([data-step] .d-head),
-  .diagram :global([data-step] .d-badge circle) {
-    transition: stroke var(--dur-1) ease, fill var(--dur-1) ease;
+  .diagram :global([data-step] :is(.d-line, .d-box, .d-head, .d-label, .d-fill)),
+  .diagram :global([data-step] .d-badge :is(circle, text)) {
+    transition: stroke var(--dur-2) var(--ease-out), fill var(--dur-2) var(--ease-out);
   }
-  .diagram :global([data-step].is-active .d-line),
-  .diagram :global([data-step].is-active .d-box) { stroke: var(--buoy); stroke-width: 2; }
-  .diagram :global([data-step].is-active .d-head) { fill: var(--buoy); }
-  .diagram :global([data-step].is-active .d-label) { font-weight: 600; }
-  .diagram :global([data-step].is-active .d-badge circle) { stroke: var(--buoy); stroke-width: 2; }
-  .diagram :global([data-step].is-active .d-badge text) { fill: var(--buoy-ink); font-weight: 600; }
+  .diagram :global([data-step].is-active .d-line) { stroke: var(--accent); stroke-width: 2; }
+  .diagram :global([data-step].is-active .d-box) {
+    fill: color-mix(in srgb, var(--accent) 9%, var(--surface-2));
+    stroke: var(--accent);
+    stroke-width: 1.5;
+  }
+  .diagram :global([data-step].is-active .d-head) { fill: var(--accent); }
+  .diagram :global([data-step].is-active .d-label:not(.d-muted)) { fill: var(--ink); }
+  .diagram :global([data-step].is-active .d-badge circle) { fill: var(--accent); stroke-width: 2; }
+  .diagram :global([data-step].is-active .d-badge text) { fill: var(--on-accent); }
 
   /* text equivalent */
   .diagram__steps {
-    list-style: none;
-    padding: 0;
-    margin: var(--s-5) auto 0;
-    max-width: var(--reading);
-    display: grid;
-    gap: var(--s-1);
+    padding: var(--s-4) clamp(var(--s-2), 3vw, var(--s-6)) clamp(var(--s-4), 3vw, var(--s-6));
+    border-top: 1px solid var(--line);
+  }
+  /* Two balanced columns that read top to bottom, then left to right. */
+  @media (min-width: 768px) {
+    .diagram__steps { columns: 2; column-gap: var(--s-5); }
   }
   .diagram__step {
+    break-inside: avoid;
     display: grid;
-    grid-template-columns: 28px 1fr;
+    grid-template-columns: 24px minmax(0, 1fr);
     gap: var(--s-3);
-    align-items: baseline;
-    padding: var(--s-2) var(--s-3);
-    border-radius: 2px;
+    align-items: start;
+    padding: var(--s-3);
+    border-radius: var(--r-md);
+    color: var(--text);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    transition: background-color var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out);
   }
   .diagram__num {
     display: inline-grid;
     place-items: center;
     width: 24px;
     height: 24px;
-    border: 1.5px solid var(--sea);
+    margin-top: 0.05em;
+    border: 1px solid var(--accent);
     border-radius: 50%;
-    color: var(--sea);
+    color: var(--accent);
     font-size: var(--step--2);
-    font-weight: 400;
+    font-weight: 640;
+    font-variant-numeric: tabular-nums;
     line-height: 1;
+    transition: background-color var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out);
   }
-  .diagram__step.is-active { background: var(--surface-2); }
-  .diagram__step.is-active .diagram__num { border-color: var(--buoy); color: var(--buoy-ink); font-weight: 600; }
-  @media (prefers-reduced-motion: reduce) {
-    .diagram :global([data-step] *) { transition: none; }
-  }
+  .diagram__step:hover,
+  .diagram__step.is-active { background: rgb(217 160 102 / .07); color: var(--ink); }
+  .diagram__step.is-active .diagram__num { background: var(--accent); color: var(--on-accent); }
 </style>

@@ -1,7 +1,8 @@
 ---
 /**
- * Page shell: <html lang>, BaseHead, skip link, Header, <main id="main">,
- * Footer, MobileCtaBar. Locale and route are detected from the URL; pass them
+ * Page shell: <html lang>, BaseHead, scroll progress bar, skip link, Header,
+ * <main id="main">, Footer, MobileCtaBar, and the card-glow pointer script.
+ * Locale and route are detected from the URL; pass them
  * explicitly to override.
  *
  *   <BaseLayout title="…" description="…">…sections…</BaseLayout>
@@ -66,6 +67,7 @@ const onHome = key === 'home';
     </BaseHead>
   </head>
   <body>
+    <div class="scroll-progress" aria-hidden="true"></div>
     <a class="skip-link" href="#main">{t.skipLink}</a>
     <Header locale={locale} routeKey={key} />
     <main id="main" tabindex="-1">
@@ -75,3 +77,20 @@ const onHome = key === 'home';
     {!hideMobileCta && <MobileCtaBar locale={locale} onHome={onHome} />}
   </body>
 </html>
+
+<script>
+  // card-glow: keep --mx/--my at the mouse position on [data-glow] elements
+  // (read by the .glow-card highlight in global.css). Mouse only; touch has no hover.
+  document.addEventListener(
+    'pointermove',
+    (event) => {
+      if (event.pointerType !== 'mouse') return;
+      const el = (event.target as Element | null)?.closest<HTMLElement>('[data-glow]');
+      if (!el) return;
+      const box = el.getBoundingClientRect();
+      el.style.setProperty('--mx', `${event.clientX - box.left}px`);
+      el.style.setProperty('--my', `${event.clientY - box.top}px`);
+    },
+    { passive: true },
+  );
+</script>

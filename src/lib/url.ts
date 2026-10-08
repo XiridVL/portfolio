@@ -23,7 +23,7 @@ export function stripBase(pathname: string): string {
 
 /** Absolute URL for canonical/OG/JSON-LD: absoluteUrl('/work/vstats/') -> 'https://…/work/vstats/'. */
 export function absoluteUrl(path: string, site: URL | string | undefined = import.meta.env.SITE): string {
-  const origin = site ? new URL(String(site)).origin : 'https://xiridvl.github.io';
+  const origin = site ? new URL(String(site)).origin : 'https://andrea-capelli-portfolio.onrender.com';
   return new URL(withBase(path), origin).href;
 }
 

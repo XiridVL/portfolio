@@ -1,7 +1,9 @@
 ---
 /**
- * External link: new tab, rel="noopener", visible ↗, and a visually hidden
- * "(opens in a new tab)" / "(si apre in una nuova scheda)".
+ * External link: new tab, rel="noopener", a small ↗ that nudges up and to the
+ * right on hover, and a visually hidden "(opens in a new tab)" /
+ * "(si apre in una nuova scheda)". The no-break space keeps the glyph on the
+ * same line as the last word.
  */
 import type { HTMLAttributes } from 'astro/types';
 import { useStrings } from '../i18n';
@@ -17,4 +19,15 @@ const { href, locale, noArrow = false, class: className, ...rest } = Astro.props
 const t = useStrings(locale);
 ---
 
-<a href={href} target="_blank" rel="noopener" class:list={['ext-link', className]} {...rest}><slot />{!noArrow && <span class="ext-link__arrow" aria-hidden="true">&nbsp;↗</span>}<span class="visually-hidden"> {t.externalHint}</span></a>
+<a href={href} target="_blank" rel="noopener" class:list={['ext-link', className]} {...rest}><slot />{!noArrow && <span aria-hidden="true">&nbsp;<span class="ext-link__arrow">↗</span></span>}<span class="visually-hidden"> {t.externalHint}</span></a>
+
+<style>
+  .ext-link__arrow {
+    display: inline-block;
+    font-size: 0.85em;
+    line-height: 1;
+    transition: transform var(--dur-2) var(--ease-out);
+  }
+  .ext-link:hover .ext-link__arrow,
+  .ext-link:focus-visible .ext-link__arrow { transform: translate(2px, -2px); }
+</style>

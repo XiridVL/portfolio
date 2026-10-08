@@ -1,11 +1,14 @@
 ---
 /**
- * Service package card (spec §3.4). Data comes from src/data/services.ts:
+ * Service package card. Data comes from src/data/services.ts:
  *
  *   {services.map((s) => <ServiceCard service={s} locale={locale} />)}
  *
- * Actions: "Ask about this →" → /?service=<id>#contact, and the small
- * "or get a custom quote" → /?service=custom#contact (both locale-aware).
+ * Six subgrid rows (head, price, duration, bullets, proven, actions): place it
+ * in a grid item that spans six subgrid rows so the rows line up across the
+ * cards of a grid row. Actions: "Ask about this →" →
+ * /?service=<id>#contact, and the small "or get a custom quote" →
+ * /?service=custom#contact (both locale-aware).
  */
 import PriceTag from './PriceTag.astro';
 import type { Service } from '../data/services';
@@ -22,14 +25,14 @@ const copy = service.content[locale];
 const headingId = `service-${service.id}-title`;
 ---
 
-<article class:list={['service-card', className]} id={`service-${service.id}`} aria-labelledby={headingId}>
+<article class:list={['service-card', 'card', 'glow-card', className]} id={`service-${service.id}`} aria-labelledby={headingId} data-glow>
   <div class="service-card__head">
-    <span class="service-card__letter mono" aria-hidden="true">{service.letter}</span>
+    <span class="service-card__letter" aria-hidden="true">{service.letter}</span>
     <h3 id={headingId} class="service-card__title"><span class="visually-hidden">{service.letter}. </span>{copy.name}</h3>
   </div>
   <PriceTag amount={service.priceFrom} per={service.per} locale={locale} class="service-card__price" />
   <p class="service-card__duration label">{copy.duration}</p>
-  <ul class="service-card__bullets buoy-list">
+  <ul class="service-card__bullets dot-list">
     {copy.bullets.map((b) => <li>{b}</li>)}
   </ul>
   {
@@ -54,47 +57,60 @@ const headingId = `service-${service.id}-title`;
 </article>
 
 <style>
+  /* Rows line up across the cards of a grid row: the parent spans six subgrid rows. */
   .service-card {
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-4);
-    padding: var(--s-5);
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-top: 1.5px solid var(--horizon);
-    border-radius: 0 0 var(--r-card) var(--r-card);
-    box-shadow: var(--shadow);
-    transition: transform var(--dur-2) var(--ease-tide), border-color var(--dur-2) ease;
+    display: grid;
+    grid-row: span 6;
+    grid-template-rows: subgrid;
+    row-gap: 0;
+    padding: clamp(24px, 2.4vw, 32px);
+    transition: transform var(--dur-2) var(--ease-out), border-color var(--dur-2) ease;
   }
   .service-card:hover,
-  .service-card:focus-within { transform: translateY(-2px); border-color: var(--sea); }
-  .service-card__head { display: flex; align-items: baseline; gap: var(--s-3); }
+  .service-card:focus-within { transform: translateY(-3px); border-color: var(--line-2); }
+
+  .service-card__head { display: flex; align-items: center; gap: 14px; }
   .service-card__letter {
-    display: inline-grid;
+    display: grid;
     place-items: center;
-    width: 32px;
-    height: 32px;
     flex: none;
-    border: 1.5px solid var(--sea);
-    border-radius: var(--r-chip);
-    color: var(--sea);
-    font-weight: 400;
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgb(217 160 102 / .5);
+    border-radius: 50%;
+    background: var(--accent-tint);
+    color: var(--accent);
+    font: 600 var(--step--1) / 1 var(--font-sans);
   }
-  .service-card__title { font-size: var(--step-2); }
-  .service-card__duration { color: var(--muted); }
-  .service-card__proven { font-size: var(--step--1); color: var(--muted); }
+  .service-card__title { font-size: clamp(1.25rem, 1.1rem + 0.35vw, 1.375rem); line-height: 1.2; letter-spacing: -0.02em; }
+
+  .service-card :global(.service-card__price) { margin-top: clamp(28px, 3vw, 40px); }
+  .service-card__duration {
+    place-self: start;
+    margin-top: var(--s-4);
+    padding: 5px 12px;
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-pill);
+    color: var(--muted);
+  }
+  .service-card__bullets, .service-card__actions { margin-top: var(--s-6); border-top: 1px solid var(--line); }
+  .service-card__bullets { padding-top: var(--s-5); font-size: 0.9375rem; line-height: 1.55; }
+  .service-card__proven { margin-top: var(--s-5); font-size: var(--step--1); line-height: 1.55; color: var(--muted); }
+  .service-card__proven em { font-style: normal; font-weight: 560; color: var(--text); }
+
   .service-card__actions {
+    grid-row: -2;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--s-1) var(--s-4);
-    margin-top: auto;
-    padding-top: var(--s-3);
-    border-top: 1px solid var(--line);
+    justify-content: space-between;
+    column-gap: var(--s-4);
+    padding-top: var(--s-2);
   }
   .service-card__ask, .service-card__custom { display: inline-flex; align-items: center; min-height: 44px; }
-  .service-card__ask { font-weight: 600; column-gap: 0.35em; }
-  .service-card__custom { font-size: var(--step--1); }
-  .service-card__arrow { display: inline-block; transition: transform var(--dur-2) var(--ease-tide); }
+  .service-card__ask { gap: 0.35em; font-weight: 600; text-decoration: none; }
+  .service-card__custom { font-size: var(--step--1); color: var(--muted); }
+  .service-card__custom:hover { color: var(--ink); }
+  .service-card__arrow { display: inline-block; transition: transform var(--dur-2) var(--ease-out); }
   .service-card__ask:hover .service-card__arrow { transform: translateX(4px); }
 </style>

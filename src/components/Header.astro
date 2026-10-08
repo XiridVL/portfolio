@@ -1,15 +1,16 @@
 ---
 /**
- * Sticky site header (spec §2.1): 64px, shrinking to 56px with a hairline after
- * 8px of scroll. Monogram lockup, main nav (≥960px), language switch, theme
- * toggle, "Get a quote" CTA (≥768px) and the mobile menu trigger (<960px).
+ * Sticky glass header. 60px at the top of the page; once 8px have scrolled by
+ * it sticks at top: -8px, so the visible bar settles at 52px without any
+ * layout change, and a hairline fades in. Monogram lockup left, main nav
+ * centred (≥960px), compact language switch + small "Get a quote" pill right
+ * (≥640 / ≥768px), mobile menu trigger below 960px.
  *
  * On the home page nav links are in-page anchors (#work); elsewhere they point
  * to the home page of the current locale (/#work, /it/#work).
  */
 import Monogram from './Monogram.astro';
 import LangSwitch from './LangSwitch.astro';
-import ThemeToggle from './ThemeToggle.astro';
 import MobileMenu from './MobileMenu.astro';
 import Button from './Button.astro';
 import { localeHref, sectionHref, useStrings, type Anchor, type Locale, type RouteKey } from '../i18n';
@@ -34,9 +35,9 @@ const navItems = navAnchors.map((item) => ({ ...item, href: sectionHref(item.anc
 
 <div class="header-sentinel" data-header-sentinel aria-hidden="true"></div>
 <header class="site-header" data-header>
-  <div class="container site-header__inner">
+  <div class="container site-header__inner ld-fade">
     <a class="site-header__logo" href={localeHref('home', locale)} aria-label={t.header.logoLabel}>
-      <Monogram variant="lockup" size={28} />
+      <Monogram variant="lockup" size={26} />
     </a>
 
     <nav class="site-header__nav" aria-label={t.header.navLabel}>
@@ -55,7 +56,6 @@ const navItems = navAnchors.map((item) => ({ ...item, href: sectionHref(item.anc
 
     <div class="site-header__tools">
       <LangSwitch locale={locale} routeKey={routeKey} class="site-header__lang" />
-      <ThemeToggle locale={locale} class="site-header__theme" />
       <Button href={sectionHref('contact', locale, onHome)} class="site-header__cta">{t.header.cta}</Button>
       <MobileMenu locale={locale} routeKey={routeKey} items={navItems} ctaHref={sectionHref('contact', locale, onHome)} />
     </div>
@@ -63,7 +63,7 @@ const navItems = navAnchors.map((item) => ({ ...item, href: sectionHref(item.anc
 </header>
 
 <script>
-  // header-state: compact header + hairline once the page scrolls past 8px.
+  // header-state: hairline once the page scrolls past the 8px sentinel.
   const header = document.querySelector<HTMLElement>('[data-header]');
   const sentinel = document.querySelector<HTMLElement>('[data-header-sentinel]');
   if (header && sentinel && 'IntersectionObserver' in window) {
@@ -72,106 +72,127 @@ const navItems = navAnchors.map((item) => ({ ...item, href: sectionHref(item.anc
     }).observe(sentinel);
   }
 
-  // active-nav: on the home page, mark the nav link of the section in view.
+  // active-nav: on the home page, mark the nav link (desktop and sheet) of the
+  // section holding the middle of the viewport. A thin band around the centre
+  // line reports which sections touch it; when two do (their boundary is in the
+  // band), the one containing the centre wins, however tall the sections are.
+  // Nothing is marked while the centre sits in the hero or an unlisted section.
   const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('a[data-nav-link]')).filter((a) =>
     a.getAttribute('href')?.startsWith('#'),
   );
   if (links.length && 'IntersectionObserver' in window) {
-    const byId = new Map<string, HTMLAnchorElement[]>();
-    for (const a of links) {
-      const id = a.dataset.navLink!;
-      byId.set(id, [...(byId.get(id) ?? []), a]);
-    }
-    const sections = [...byId.keys()].map((id) => document.getElementById(id)).filter((el): el is HTMLElement => !!el);
-    // Sections currently crossing the middle band of the viewport. When none
-    // does (e.g. back in the hero), no nav item is marked active.
-    const inBand = new Set<string>();
+    const sections = [...new Set(links.map((a) => a.dataset.navLink ?? ''))]
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => !!el);
+    const inBand = new Set<Element>();
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting) inBand.add(entry.target.id);
-          else inBand.delete(entry.target.id);
+          if (entry.isIntersecting) inBand.add(entry.target);
+          else inBand.delete(entry.target);
         }
-        const current = sections.find((s) => inBand.has(s.id))?.id;
+        const mid = window.innerHeight / 2;
+        const touching = sections.filter((s) => inBand.has(s));
+        const current = (
+          touching.find((s) => {
+            const box = s.getBoundingClientRect();
+            return box.top <= mid && box.bottom > mid;
+          }) ?? touching[0]
+        )?.id;
         for (const a of links) a.classList.toggle('is-active', a.dataset.navLink === current);
       },
-      { rootMargin: '-45% 0px -50% 0px' },
+      { rootMargin: '-48% 0px -48% 0px' },
     );
     sections.forEach((s) => observer.observe(s));
   }
 </script>
 
 <style>
-  .header-sentinel { position: absolute; top: 0; left: 0; width: 1px; height: 8px; pointer-events: none; }
-  .site-header {
-    position: sticky;
+  /* The sentinel is exactly as tall as the header shrinks. */
+  .header-sentinel {
+    position: absolute;
     top: 0;
-    z-index: 50;
-    background: color-mix(in srgb, var(--bg) 92%, transparent);
-    backdrop-filter: saturate(1.2) blur(8px);
-    border-bottom: 1px solid transparent;
-    transition: border-color var(--dur-2) ease, background-color var(--dur-2) ease;
+    left: 0;
+    width: 1px;
+    height: calc(var(--header-h) - var(--header-h-compact));
+    pointer-events: none;
   }
-  .site-header.is-scrolled { border-bottom-color: var(--line); }
+  .site-header { position: sticky; top: calc(var(--header-h-compact) - var(--header-h)); z-index: 50; }
+  /* Glass on a pseudo-element, so the header never becomes a backdrop root for its children. */
+  .site-header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: rgb(18 18 18 / .62);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--dur-2);
+  }
+  .is-scrolled::before { border-bottom-color: var(--line); }
+
+  /* Content sits in the lower 52px, so it is centred in the compact bar. Quicker ld-fade. */
   .site-header__inner {
-    display: flex;
-    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: var(--s-4);
     height: var(--header-h);
-    transition: height var(--dur-2) var(--ease-tide);
+    padding-top: calc(var(--header-h) - var(--header-h-compact));
+    animation-duration: var(--dur-3);
+    animation-delay: 80ms;
   }
-  .site-header.is-scrolled .site-header__inner { height: var(--header-h-compact); }
 
-  .site-header__logo {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    color: var(--ink);
-    text-decoration: none;
-    margin-right: auto;
-    min-width: 0;
-  }
+  .site-header__logo { justify-self: start; display: inline-flex; align-items: center; min-height: 44px; color: var(--ink); text-decoration: none; }
+  .site-header__logo:hover { color: var(--ink); opacity: .8; }
 
   .site-header__nav { display: none; }
-  .site-header__nav ul { display: flex; gap: var(--s-1); list-style: none; padding: 0; }
+  .site-header__nav ul { display: flex; }
   .site-header__nav a {
     position: relative;
     display: inline-flex;
     align-items: center;
     min-height: 44px;
-    padding-inline: var(--s-3);
-    color: var(--ink);
+    padding-inline: 14px;
+    color: var(--muted);
+    font-size: var(--step--1);
+    font-weight: 520;
     text-decoration: none;
-    font-weight: 600;
+    transition: color var(--dur-1);
   }
-  .site-header__nav a:hover { color: var(--sea); }
-  /* Buoy-dot underline on the active section (spec §8.6.5). */
-  .site-header__nav a.is-active::after {
+  .site-header__nav a:hover,
+  .site-header__nav .is-active { color: var(--ink); }
+  /* Active section: a 4px clay dot under the label. */
+  .site-header__nav a::after {
     content: "";
     position: absolute;
-    left: 50%;
-    bottom: 4px;
-    width: 6px;
-    height: 6px;
-    margin-left: -3px;
+    left: calc(50% - 2px);
+    bottom: 3px;
+    width: 4px;
+    height: 4px;
     border-radius: 50%;
-    background: var(--buoy);
+    background: var(--accent);
+    opacity: 0;
+    transform: scale(0);
+    transition: opacity var(--dur-2), transform var(--dur-2) var(--ease-out);
   }
+  .site-header__nav .is-active::after { opacity: 1; transform: none; }
 
-  .site-header__tools { display: flex; align-items: center; gap: var(--s-1); min-width: 0; flex-shrink: 0; }
-  .site-header__tools :global(.site-header__cta) { display: none; margin-left: var(--s-2); }
-  .site-header__tools :global(.site-header__lang), .site-header__tools :global(.site-header__theme) { display: none; }
+  .site-header__tools { justify-self: end; display: flex; align-items: center; gap: var(--s-2); }
+  .site-header__tools :global(.site-header__lang) { display: none; }
+  /* A touch smaller than Button md; ::before keeps the hit area at 44px. */
+  .site-header__tools :global(.site-header__cta) { display: none; position: relative; min-height: 34px; padding-inline: 16px; font-size: var(--step--1); }
+  .site-header__tools :global(.site-header__cta)::before { content: ""; position: absolute; inset: -5px 0; }
 
   @media (min-width: 640px) {
-    .site-header__tools :global(.site-header__lang), .site-header__tools :global(.site-header__theme) { display: inline-flex; }
+    .site-header__tools :global(.site-header__lang) { display: inline-flex; }
   }
   @media (min-width: 768px) {
     .site-header__tools :global(.site-header__cta) { display: inline-flex; }
   }
   @media (min-width: 960px) {
+    .site-header__inner { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
     .site-header__nav { display: block; }
-    .site-header__logo { margin-right: 0; }
-    .site-header__nav { margin-inline: auto; }
   }
 </style>

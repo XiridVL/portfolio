@@ -1,11 +1,15 @@
 ---
 /**
- * Home hero (#top, spec §3.1 / §4.1): eyebrow, two-line H1 on the horizon,
- * subcopy, three calls to action, microline and the stream panel.
- * Load motion (spec §12.1) is CSS only and collapses under reduced motion.
+ * Home hero (#top): a centred keynote opening. Glass eyebrow pill with a
+ * pulsing dot, two-line H1 with one italic serif accent word, sub copy, three
+ * calls to action and the microline; below it the stream panel stands on a lit
+ * stage that peeks into the first screen on desktop.
+ * Motion is CSS only: the head rises in on load and drifts away as the page
+ * scrolls (sd-exit); the panel starts tilted back and stands up (sd-tilt).
+ * Without support, or under reduced motion, everything renders in place.
  */
+import AccentText from '../AccentText.astro';
 import Button from '../Button.astro';
-import Contours from '../Contours.astro';
 import StreamPanel from '../mockups/StreamPanel.astro';
 import { homeCopy } from '../../i18n/home';
 import type { Locale } from '../../i18n';
@@ -15,100 +19,153 @@ interface Props {
 }
 const { locale } = Astro.props;
 const copy = homeCopy[locale].hero;
+// The accent word sits on one title line; a copy edit that drops it fails the build.
+const accentLine = copy.titleLines.findIndex((line) => line.includes(copy.titleAccent));
+if (accentLine < 0) throw new Error(`Hero accent "${copy.titleAccent}" not found in the title`);
+// Wrap only at the " · " separators, keeping each part (and the dot) together.
+const keepParts = (text: string) =>
+  text
+    .split(/( · )/)
+    .map((part, i) => (i % 2 ? `\u00A0${part.trim()} ` : part.replaceAll(' ', '\u00A0')))
+    .join('');
 ---
 
 <section id="top" class="hero" aria-labelledby="top-title">
-  <Contours class="hero__contours" width={1200} height={760} levels={7} points={16} cx={0.72} cy={0.42} />
-  <div class="container hero__grid">
-    <div class="hero__head">
-      <p class="hero__eyebrow eyebrow">{copy.eyebrow}</p>
+  <div class="hero__bg" aria-hidden="true">
+    <span class="ember ember--drift hero__ember--clay"></span>
+    <span class="ember hero__ember--ivory"></span>
+  </div>
+
+  <div class="container">
+    <div class="hero__head sd-exit">
+      <p class="hero__eyebrow eyebrow ld-rise" style="--i: 0">
+        <span class="hero__pulse" aria-hidden="true"></span>
+        <span>{keepParts(copy.eyebrow)}</span>
+      </p>
       <h1 id="top-title" class="hero__title">
         {
           copy.titleLines.map((line, i) => (
             <>
               {i > 0 && ' '}
-              <span class="hero__line" style={`--i: ${i}`}>{line}</span>
+              <span class="hero__line ld-rise" style={`--i: ${i + 1}`}>
+                <AccentText text={line} accent={i === accentLine ? copy.titleAccent : undefined} />
+              </span>
             </>
           ))
         }
       </h1>
-      <div class="hero__horizon" aria-hidden="true"></div>
-    </div>
-    <div class="hero__copy">
-      <p class="hero__sub lead">{copy.sub}</p>
-      <div class="hero__actions">
+      <p class="hero__sub lead ld-rise" style="--i: 3">{copy.sub}</p>
+      <div class="hero__actions ld-rise" style="--i: 4">
         <Button href="#contact" arrow="right" size="lg">{copy.primary}</Button>
         <Button href="#services" variant="secondary" arrow="down" size="lg">{copy.secondary}</Button>
         <Button href="#work" variant="text" arrow="down">{copy.tertiary}</Button>
       </div>
-      <p class="hero__micro mono">{copy.microline}</p>
+      <p class="hero__micro ld-rise" style="--i: 5">{keepParts(copy.microline)}</p>
     </div>
-    <figure class="hero__visual">
-      <StreamPanel locale={locale} />
-      <figcaption class="hero__caption mono">{copy.caption}</figcaption>
+
+    <figure class="hero__stage ld-fade" style="--i: 5">
+      <div class="hero__device">
+        <span class="ember hero__glow" aria-hidden="true"></span>
+        <div class="hero__tilt sd-tilt">
+          <StreamPanel locale={locale} />
+        </div>
+      </div>
+      <figcaption class="hero__caption">{copy.caption}</figcaption>
     </figure>
   </div>
 </section>
 
 <style>
   .hero {
+    --hero-peek: clamp(150px, 22svh, 240px);
     position: relative;
     isolation: isolate;
     overflow-x: clip;
-    padding-block: var(--s-8);
+    padding-block: var(--s-7) var(--s-8);
     scroll-margin-top: 80px;
   }
-  .hero :global(.hero__contours) {
+
+  /* Atmosphere: a drifting clay ember, a fainter ivory one, and a 64px hairline
+     grid that fades out from the headline. CSS backgrounds only. */
+  .hero__bg {
     position: absolute;
     inset: 0;
     z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
   }
-
-  /* H1 spans the full width (two lines from 640px); copy and panel sit below the horizon. */
-  .hero__grid {
-    display: grid;
-    gap: 0 var(--s-7);
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "head" "copy" "visual";
-  }
-  @media (min-width: 960px) {
-    .hero__grid {
-      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-      grid-template-areas: "head head" "copy visual";
-      align-items: start;
-    }
-  }
-  .hero__head { grid-area: head; min-width: 0; }
-  .hero__copy { grid-area: copy; min-width: 0; }
-  .hero__title { margin-top: var(--s-4); }
-  .hero__line { display: inline; }
-  @media (min-width: 640px) {
-    .hero__line { display: block; }
-  }
-
-  /* Full-bleed horizon under the H1, drawn from the left edge on load. */
-  /* The rule is height 0, so its own margins would collapse into one: the space
-     below it comes from the head's padding instead. */
-  .hero__head { padding-bottom: var(--s-6); }
-  .hero__horizon {
-    position: relative;
-    height: 0;
-    margin-top: var(--s-6);
-  }
-  .hero__horizon::before {
+  .hero__bg::before {
     content: "";
     position: absolute;
-    top: 0;
-    left: calc(50% - 50vw);
-    width: 100vw;
-    border-top: 1.5px solid var(--horizon);
-    transform-origin: left center;
+    inset: 0;
+    background:
+      linear-gradient(rgb(242 239 232 / .04) 1px, transparent 1px) 0 0 / 64px 64px,
+      linear-gradient(90deg, rgb(242 239 232 / .04) 1px, transparent 1px) calc(50% + 32px) 0 / 64px 64px;
+    -webkit-mask-image: radial-gradient(ellipse 58% 34% at 50% 24%, #000 10%, transparent 100%);
+    mask-image: radial-gradient(ellipse 58% 34% at 50% 24%, #000 10%, transparent 100%);
+  }
+  .hero__ember--clay { width: min(1080px, 120vw); top: max(-520px, -60vw); right: max(-400px, -50vw); }
+  .hero__ember--ivory {
+    width: min(820px, 110vw);
+    top: 6%;
+    left: max(-420px, -55vw);
+    background: radial-gradient(closest-side, rgb(242 239 232 / .05), rgb(242 239 232 / .015) 55%, transparent);
   }
 
-  .hero__sub { color: var(--ink); }
+  /* Head: centred column. From tablet up it fills the first screen minus a peek of the panel. */
+  .hero__head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: var(--s-8);
+    text-align: center;
+  }
+  @media (min-width: 768px) and (min-height: 600px) {
+    .hero { padding-top: 0; }
+    .hero__head {
+      min-height: calc(100svh - var(--header-h) - var(--hero-peek));
+      justify-content: center;
+      padding-block: var(--s-6) var(--s-3);
+    }
+  }
+
+  .hero__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 34px;
+    padding: 7px 18px 7px 14px;
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-pill);
+    background: rgb(242 239 232 / .04);
+    box-shadow: 0 1px 0 rgb(255 255 255 / .05) inset;
+    text-wrap: balance;
+  }
+  .hero__pulse {
+    position: relative;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px rgb(217 160 102 / .7);
+    flex: none;
+  }
+
+  .hero__title {
+    margin-top: var(--s-6);
+    /* Sized so each English title line holds on one line from ~600px up. */
+    font-size: clamp(2.75rem, min(8vw, 12svh), 6.25rem);
+  }
+  .hero__line { display: block; }
+
+  .hero__sub { max-width: 58ch; margin-top: var(--s-6); }
+  @media (max-width: 479px) {
+    .hero__sub { font-size: 1.0625rem; }
+  }
   .hero__actions {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     align-items: center;
     gap: var(--s-3) var(--s-4);
     margin-top: var(--s-6);
@@ -116,43 +173,83 @@ const copy = homeCopy[locale].hero;
   .hero__micro {
     margin-top: var(--s-5);
     font-size: var(--step--1);
-    color: var(--muted);
+    color: var(--faint);
   }
 
-  /* Single column: keep the panel at its desktop density instead of stretching it. */
-  .hero__visual { grid-area: visual; position: relative; z-index: 1; min-width: 0; max-width: 520px; margin-top: var(--s-7); }
-  @media (min-width: 960px) {
-    .hero__visual { margin-top: 0; max-width: none; }
+  /* Stage: the panel on a lit floor, ember light spilling from behind it. */
+  .hero__stage {
+    position: relative;
+    isolation: isolate;
+    max-width: 920px;
+    margin-inline: auto;
+  }
+  .hero__device { position: relative; }
+  .hero__glow {
+    width: 124%;
+    aspect-ratio: 1.6;
+    left: -12%;
+    top: 26%;
+    background: radial-gradient(closest-side, rgb(217 160 102 / .24), rgb(217 160 102 / .07) 55%, transparent);
+  }
+  .hero__device::before,
+  .hero__device::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    pointer-events: none;
+  }
+  /* Floor highlight and its soft reflection. */
+  .hero__device::before {
+    left: 12%;
+    right: 12%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgb(242 239 232 / .28), transparent);
+  }
+  .hero__device::after {
+    left: 6%;
+    right: 6%;
+    height: 96px;
+    background: radial-gradient(50% 100% at 50% 0%, rgb(242 239 232 / .08), transparent 80%);
+  }
+  .hero__tilt :global(.mk) {
+    border-radius: 18px;
+    box-shadow: 0 1px 0 rgb(255 255 255 / .06) inset, 0 28px 56px -28px rgb(0 0 0 / .85);
   }
   .hero__caption {
-    margin-top: var(--s-3);
-    font-size: var(--step--2);
+    max-width: 52ch;
+    margin: var(--s-8) auto 0;
+    font-size: var(--step--1);
     line-height: 1.5;
     color: var(--muted);
+    text-align: center;
+    text-wrap: balance;
   }
 
-  /* Load motion (spec §12.1): horizon draws, H1 lines rise, microline last. */
   @media (prefers-reduced-motion: no-preference) {
-    .hero__horizon::before { animation: hero-draw var(--dur-3) var(--ease-tide) both; }
-    .hero__line {
-      animation: hero-rise var(--dur-3) var(--ease-tide) both;
-      animation-delay: calc(var(--i) * 80ms);
+    .hero__pulse::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: var(--accent);
+      animation: hero-pulse 2.4s var(--ease-out) infinite;
     }
-    @media (max-width: 639px) {
-      .hero__line { display: inline-block; }
+    @keyframes hero-pulse {
+      from { opacity: .7; transform: scale(1); }
+      to { opacity: 0; transform: scale(3.4); }
     }
-    .hero__micro { animation: hero-fade var(--dur-2) ease 600ms both; }
-  }
-  @keyframes hero-draw {
-    from { transform: scaleX(0); }
-    to { transform: scaleX(1); }
-  }
-  @keyframes hero-rise {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: none; }
-  }
-  @keyframes hero-fade {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    /* Phones: the head is about a screen tall, so it only starts to fade once
+       the calls to action have scrolled past the middle. */
+    @media (max-width: 767px) {
+      .hero__head { animation-range: exit 35% exit 100%; }
+    }
+    /* The head fades out a little sooner on tablets and desktops, before the
+       panel scrolls up into its place. The panel is never pulled up over the
+       head: when the copy runs long it would cover the price line. */
+    @supports (animation-timeline: view()) {
+      @media (min-width: 768px) and (min-height: 600px) {
+        .hero__head { animation-range: exit 0% exit 70%; }
+      }
+    }
   }
 </style>

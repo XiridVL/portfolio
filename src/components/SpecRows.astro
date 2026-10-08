@@ -1,8 +1,9 @@
 ---
 /**
- * Spec rows (spec §8.6): mono label, dotted leader, sans value, as a <dl>.
- * A row may carry `links` instead of (or after) `value`; external links get ↗
- * and the "opens in a new tab" hint.
+ * Spec rows: a compact definition list. Small muted label on the left, value
+ * on the right, hairline dividers between rows; on a narrow container the
+ * label sits above its value. A row may carry `links` instead of (or after)
+ * `value`; external links get ↗ and the "opens in a new tab" hint.
  *
  * size="sm" for cards, "md" (default) for the case-study spec sheet.
  */
@@ -54,50 +55,33 @@ const { rows, locale = 'en', size = 'md', label, class: className } = Astro.prop
 
 <style>
   /* Container query: the row layout follows the list's own width (cards and case headers). */
-  .spec-rows { margin: 0; container-type: inline-size; }
+  .spec-rows { --spec-label: 7rem; margin: 0; container-type: inline-size; }
+  .spec-rows--md { --spec-label: 9rem; }
   .spec-rows__row {
-    display: flex;
+    display: grid;
+    grid-template-columns: var(--spec-label) minmax(0, 1fr);
     align-items: baseline;
-    gap: var(--s-2);
-    padding-block: var(--s-1);
+    gap: 2px var(--s-4);
+    padding-block: 10px;
   }
+  .spec-rows__row + .spec-rows__row { border-top: 1px solid var(--line); }
   .spec-rows__label {
-    flex: 1 1 auto;
-    display: flex;
-    align-items: baseline;
-    gap: var(--s-2);
-    white-space: nowrap;
-    font-family: var(--font-mono);
-    font-size: var(--step--2);
-    font-weight: 400;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.4;
     color: var(--muted);
   }
-  /* Dotted leader between label and value. */
-  .spec-rows__label::after {
-    content: "";
-    flex: 1 1 var(--s-5);
-    min-width: var(--s-5);
-    border-bottom: 1px dotted var(--line-strong);
-    transform: translateY(-0.3em);
-  }
-  /* One-line values sit flush right after the leader; a value that wraps reads
-     as a left-aligned block instead of a ragged right edge. */
-  .spec-rows__value {
-    flex: 0 1 auto;
-    margin: 0;
-    text-align: left;
-    color: var(--ink);
-    max-width: 72%;
-  }
+  .spec-rows__value { margin: 0; color: var(--text); line-height: 1.5; }
   .spec-rows__links a { white-space: nowrap; }
   .spec-rows--sm .spec-rows__value { font-size: var(--step--1); }
-  .spec-rows--md .spec-rows__row { padding-block: var(--s-2); }
-  /* Narrow: label above value, no leader. */
-  @container (max-width: 479px) {
-    .spec-rows__row { flex-wrap: wrap; row-gap: 0; }
-    .spec-rows__label::after { display: none; }
-    .spec-rows__value { flex-basis: 100%; max-width: none; }
+  .spec-rows--md .spec-rows__row { padding-block: 14px; }
+  .spec-rows--md .spec-rows__label { font-size: var(--step--1); }
+  .spec-rows--md .spec-rows__value { font-size: 0.9375rem; }
+  /* Narrow: label above value. */
+  @container (max-width: 319px) {
+    .spec-rows__row { grid-template-columns: minmax(0, 1fr); }
+  }
+  @container (max-width: 439px) {
+    .spec-rows--md .spec-rows__row { grid-template-columns: minmax(0, 1fr); }
   }
 </style>

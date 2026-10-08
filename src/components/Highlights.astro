@@ -1,12 +1,13 @@
 ---
 /**
- * Case-study highlights, numbered 01–06: mono label, bold title, 1–3 sentences.
- * Each item carries data-step="n" and is focusable so it links to the diagram
- * group with the same data-step (hover and keyboard focus; script in CaseStudyLayout).
+ * Case-study highlights 01–06 as numbered cards: clay tabular number, small
+ * label, title, 1–3 sentences. Each card carries data-step="n" and is focusable
+ * so it links to the diagram group with the same data-step (hover and keyboard
+ * focus; script in CaseStudyLayout). The linked card glows: clay border, warm tint.
  * `text` may contain inline HTML (<em>, <a>) and is rendered with set:html.
  */
 export interface HighlightItem {
-  /** Mono label, e.g. "PAYMENTS". */
+  /** Small label, e.g. "PAYMENTS". */
   label: string;
   title: string;
   /** 1–3 sentences; trusted inline HTML allowed. */
@@ -22,37 +23,60 @@ const { items, class: className } = Astro.props;
 <ol class:list={['highlights', className]} role="list">
   {
     items.map((item, i) => (
-      <li class="highlights__item" data-step={i + 1} tabindex="0">
-        <span class="highlights__num mono" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
-        <div>
+      <li class="highlights__item sd-rise" data-step={i + 1} tabindex="0" style={`--i: ${i % 3}`}>
+        <p class="highlights__head">
+          <span class="highlights__num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
           <span class="highlights__label label">{item.label}</span>
-          <h3 class="highlights__title">{item.title}</h3>
-          <p class="highlights__text" set:html={item.text} />
-        </div>
+        </p>
+        <h3 class="highlights__title">{item.title}</h3>
+        <p class="highlights__text" set:html={item.text} />
       </li>
     ))
   }
 </ol>
 
 <style>
-  .highlights { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--s-2); }
+  .highlights { display: grid; gap: var(--s-4); }
+  @media (min-width: 640px) { .highlights { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 1024px) { .highlights { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-5); } }
+
   .highlights__item {
-    display: grid;
-    grid-template-columns: 3ch 1fr;
-    gap: var(--s-4);
-    padding: var(--s-5) var(--s-3);
-    border-top: 1px solid var(--line);
-    border-radius: 2px;
+    display: flex;
+    flex-direction: column;
+    padding: clamp(var(--s-5), 2.6vw, var(--s-6));
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow);
+    transition:
+      border-color var(--dur-2) var(--ease-out),
+      background-color var(--dur-2) var(--ease-out),
+      box-shadow var(--dur-2) var(--ease-out);
   }
-  .highlights__num { font-size: var(--step-1); color: var(--muted); font-weight: 400; }
-  .highlights__label { display: block; color: var(--sea); margin-bottom: var(--s-1); }
-  .highlights__title {
-    font-family: var(--font-body);
+  .highlights__head { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); margin-bottom: var(--s-6); }
+  .highlights__num {
     font-size: var(--step-1);
-    font-weight: 600;
-    line-height: 1.35;
+    font-weight: 620;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
   }
-  .highlights__text { margin-top: var(--s-2); color: var(--ink); }
-  .highlights__item.is-active { background: var(--surface-2); }
-  .highlights__item.is-active .highlights__num { color: var(--buoy-ink); font-weight: 600; }
+  .highlights__label { color: var(--muted); text-align: end; }
+  .highlights__title {
+    font-size: var(--step-2);
+    font-weight: 640;
+    line-height: 1.2;
+    letter-spacing: -0.022em;
+    text-wrap: balance;
+  }
+  .highlights__text { margin-top: var(--s-3); color: var(--text); font-size: 0.9375rem; line-height: 1.65; }
+
+  /* Linked with the diagram (hover, focus, or the matching diagram step). */
+  .highlights__item:hover,
+  .highlights__item.is-active {
+    border-color: rgb(217 160 102 / .5);
+    background-color: color-mix(in srgb, var(--accent) 5%, var(--surface));
+    box-shadow: 0 0 0 4px rgb(217 160 102 / .07), 0 28px 60px -30px rgb(217 160 102 / .4);
+  }
 </style>

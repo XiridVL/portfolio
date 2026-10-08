@@ -1,10 +1,10 @@
 # Andrea Capelli: portfolio
 
-Freelance portfolio for Andrea Capelli, full-stack web developer in Rimini. English at `/`, Italian at `/it/`. Built with Astro as a fully static site (no client framework, no third-party requests) and deployed to GitHub Pages.
+Freelance portfolio for Andrea Capelli, full-stack web developer in Rimini. English at `/`, Italian at `/it/`. Built with Astro as a fully static site (no client framework, no third-party requests) and deployed to Render.
 
 ## Run it locally
 
-Requires Node.js 22 or newer.
+Requires Node.js 22 or newer (24 is what CI and Render use, see `.node-version`).
 
 ```sh
 npm install
@@ -18,47 +18,39 @@ npm run check:links        # every route from the sitemap, internal link, anchor
 
 `npm run build` also renders the Open Graph images (`/og/{locale}-{page}.png`), the PNG favicons, `robots.txt` and the sitemap.
 
-## Deploy to GitHub Pages
+## Deploy to Render
 
-The workflow in `.github/workflows/deploy.yml` runs on every push to `main`:
+The site is a Render **static site**, described in `render.yaml` (a Render Blueprint).
 
-1. **Quality:** type check, build, `check:compliance`, and Lighthouse budgets on `/`, `/it/` and `/work/vstats/` (scores of 95+ in all four categories, plus byte budgets for HTML, CSS, JS, fonts and images). Any failure stops the deploy. Pull requests run this job only.
-2. **Build:** builds the site with the repository's `SITE_URL` and `BASE_PATH`, runs `check:links` and `check:compliance` on that exact build, and uploads it as the Pages artifact.
-3. **Deploy:** publishes it to GitHub Pages.
+One-time setup:
 
-One-time setup: in the repository, go to **Settings → Pages → Build and deployment** and set **Source** to **GitHub Actions**.
+1. Push the repository to GitHub.
+2. In the [Render Dashboard](https://dashboard.render.com/), choose **New → Blueprint**, connect GitHub and select the repository. Render reads `render.yaml`, creates the `andrea-capelli-portfolio` static site and deploys the default branch.
+3. The site goes live at `https://andrea-capelli-portfolio.onrender.com` (Render adds a suffix if that name is taken; the build picks up the real address automatically).
+
+After that, every push to `main` deploys on its own:
+
+1. **CI** (`.github/workflows/ci.yml`) runs on every push and pull request: type check, build, `check:compliance`, `check:links`, and Lighthouse budgets on `/`, `/it/` and `/work/vstats/` (scores of 95+ in all four categories, plus byte budgets for HTML, CSS, JS, fonts and images).
+2. **Render** waits for those checks to pass on the commit (`autoDeployTrigger: checksPass`), then builds with `npm ci && npm run build && npm run check:links && npm run check:compliance`. A failing check stops the deploy, and the previous version stays online.
+3. The built `dist/` is published to Render's CDN. Hashed assets under `/_astro/` are served with a one-year immutable cache; every page gets basic security headers. A missing path is answered with `404.html`.
+
+Node.js comes from `.node-version` (24), for both Render and CI.
 
 ### Site address and base path
 
-Two repository variables control the URLs (**Settings → Secrets and variables → Actions → Variables**). The build reads them as environment variables, so you can also set them locally.
+Two environment variables control the URLs. Set them on the Render service (**Environment**), or locally for a test build.
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `SITE_URL` | `https://xiridvl.github.io` | Origin used for canonical links, hreflang, Open Graph, JSON-LD, `robots.txt` and the sitemap. No trailing path. |
-| `BASE_PATH` | `/` | Path the site is served under. |
-
-Pick the case that matches the repository:
-
-- **User site** (repository named `XiridVL.github.io`): served at `https://xiridvl.github.io/`. Keep the defaults: `SITE_URL=https://xiridvl.github.io`, `BASE_PATH=/`.
-- **Project site** (any other repository name, e.g. `portfolio`): served at `https://xiridvl.github.io/portfolio/`. Set `BASE_PATH=/portfolio/` (leading and trailing slash) and keep `SITE_URL=https://xiridvl.github.io`. Every internal link, asset and absolute URL picks up the prefix. Crawlers only read `robots.txt` at the origin root, so on a project site the `/portfolio/robots.txt` built with the site (and the sitemap line in it) is ignored: submit `https://xiridvl.github.io/portfolio/sitemap-index.xml` in Google Search Console instead, or use a user site or custom domain.
-- **Custom domain:** see below. `BASE_PATH` goes back to `/`.
-
-To try a project-site build locally:
-
-```sh
-BASE_PATH=/portfolio/ npm run build
-```
+| `SITE_URL` | the service's `onrender.com` URL on Render (`RENDER_EXTERNAL_URL`), `https://andrea-capelli-portfolio.onrender.com` locally | Origin used for canonical links, hreflang, Open Graph, JSON-LD, `robots.txt` and the sitemap. No trailing path. |
+| `BASE_PATH` | `/` | Path the site is served under. Keep `/` on Render. |
 
 ### Custom domain
 
 1. Buy the domain (for example `andreacapelli.dev` or `.it`).
-2. Create `public/CNAME` containing only the bare domain, e.g. `andreacapelli.dev`. It is copied to the site root on every build, so the setting survives deploys.
-3. Set the repository variables `SITE_URL=https://andreacapelli.dev` and `BASE_PATH=/`.
-4. At the DNS provider, add the GitHub Pages records: for the apex domain, `A` records to `185.199.108.153`, `185.199.109.153`, `185.199.110.153` and `185.199.111.153` (and the matching `AAAA` records if you want IPv6); for `www`, a `CNAME` to `xiridvl.github.io`.
-5. In **Settings → Pages**, enter the domain under **Custom domain** and, once the certificate is issued, tick **Enforce HTTPS**.
-6. Update `domain` in `src/data/site.ts`.
-
-`public/.nojekyll` must stay: it tells GitHub Pages to serve the `_astro/` folder as is.
+2. In the Render service, open **Settings → Custom Domains**, add the domain and follow the DNS records Render shows for your provider (remove any `AAAA` records). Adding the apex also adds `www` and redirects one to the other. Render issues and renews the TLS certificate.
+3. Set `SITE_URL=https://andreacapelli.dev` on the service (**Environment**, or uncomment it in `render.yaml`) and redeploy, so canonical links, the sitemap and Open Graph tags use the domain.
+4. Update `domain` in `src/data/site.ts`.
 
 ## Where to edit things
 
@@ -95,6 +87,7 @@ Never type a price into copy: use the values in `src/data/services.ts`, so the s
 `scripts/compliance-check.mjs` scans `dist/` and the repository sources and fails on:
 
 - banned wording, internal names, hosts or variables, and unverified claims;
+- em dashes anywhere a visitor reads (house style: use a comma, colon, full stop or " · ");
 - vStats links outside the approved list, and any link to the IVPITER domain;
 - missing Riot disclaimers (footer, work grid, case studies), beta versions, the Teams billing line and the required project wording;
 - prices without the VAT wording;

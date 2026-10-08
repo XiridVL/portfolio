@@ -1,8 +1,10 @@
 ---
 /**
- * Project card for the home Work grid (spec §3.3). The H3 link is stretched
- * over the whole card; external links sit above it (position: relative; z-index: 1).
- * The mockup is picked from the slug unless you pass one in the default slot.
+ * Project card for the home Work list. Phones: mockup stage on top, body below.
+ * From 960px: horizontal, the mockup on a lit stage (~58%) beside the body.
+ * The H3 link is stretched over the whole card; external links sit above it
+ * (position: relative; z-index: 1). The mockup is picked from the slug unless
+ * you pass one in the default slot.
  *
  *   {projectCards(locale).map((p) => <WorkCard {...p} locale={locale} />)}
  */
@@ -42,18 +44,25 @@ const mockups = {
   ivpiter: MockupIvpiter,
 } as const;
 const Mockup = mockups[slug];
+// Two-tone title: product name in ink, the description after the colon in grey.
+const split = title.indexOf(': ');
+const name = split > 0 ? title.slice(0, split + 1) : title;
+const rest = split > 0 ? title.slice(split + 2) : '';
 ---
 
-<article class:list={['work-card', className]}>
-  <div class="work-card__mockup" style={`view-transition-name: ${vt.mock}`}>
-    {Astro.slots.has('default') ? <slot /> : <Mockup locale={locale} />}
+<article class:list={['work-card', 'glow-card', className]} data-glow>
+  <div class="work-card__stage">
+    <span class="ember" aria-hidden="true"></span>
+    <div class="work-card__mockup" style={`view-transition-name: ${vt.mock}`}>
+      {Astro.slots.has('default') ? <slot /> : <Mockup locale={locale} />}
+    </div>
   </div>
   <div class="work-card__body">
     <ul class="work-card__chips" role="list">
       {chips.map((chip) => <li><StatusChip kind={chip.kind} text={chip.text} /></li>)}
     </ul>
-    <Heading class="work-card__title h3" style={`view-transition-name: ${vt.title}`}>
-      <a href={href} class="work-card__link">{title}</a>
+    <Heading class="work-card__title" style={`view-transition-name: ${vt.title}`}>
+      <a href={href} class="work-card__link">{name}{rest && <> <span class="work-card__desc">{rest}</span></>}</a>
     </Heading>
     <p class="work-card__text">{oneLiner}</p>
     <SpecRows rows={specRows} size="sm" locale={locale} class="work-card__spec" />
@@ -72,58 +81,87 @@ const Mockup = mockups[slug];
 
 <style>
   .work-card {
-    position: relative;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: auto 1fr;
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: var(--r-card);
+    border-radius: clamp(var(--r-lg), 4vw, var(--r-xl));
     box-shadow: var(--shadow);
     overflow: hidden;
+    transition: border-color var(--dur-2) ease;
   }
-  /* Top horizon rule: extends to full width in buoy on hover/focus. */
-  .work-card::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 2;
-    width: 25%;
-    border-top: 1.5px solid var(--horizon);
-    transition: width var(--dur-2) var(--ease-tide), border-color var(--dur-2) ease;
-  }
-  .work-card:hover::before,
-  .work-card:focus-within::before { width: 100%; border-color: var(--buoy); }
+  .work-card:is(:hover, :focus-within) { border-color: var(--line-2); }
+  .work-card:has(.work-card__link:focus-visible) { outline: 2px solid var(--accent); outline-offset: 4px; }
 
-  .work-card__mockup {
-    padding: var(--s-5);
-    background: var(--surface-2);
-    transition: transform var(--dur-2) var(--ease-tide);
+  /* Stage: a slightly lit panel with an ember glow behind the mockup. */
+  .work-card__stage {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    place-items: center;
+    padding: clamp(20px, 3.4vw, 48px);
+    background: linear-gradient(rgb(242 239 232 / .045), rgb(242 239 232 / .015));
+    border-bottom: 1px solid var(--line);
   }
-  .work-card__mockup > :global(*) { transition: transform var(--dur-2) var(--ease-tide); }
-  .work-card:hover .work-card__mockup > :global(*),
-  .work-card:focus-within .work-card__mockup > :global(*) { transform: translateY(-4px); }
+  .ember {
+    inset: 50% auto auto 50%;
+    width: 125%;
+    translate: -50% -44%;
+    opacity: 0.85;
+    transition: opacity var(--dur-3), scale var(--dur-3) var(--ease-out);
+  }
+  .work-card:hover .ember { opacity: 1; scale: 1.06; }
+  .work-card__mockup { width: 100%; max-width: 640px; }
+  .work-card__mockup > :global(*) { transition: transform var(--dur-3) var(--ease-out); }
+  .work-card:is(:hover, :focus-within) .work-card__mockup > :global(*) { transform: translateY(-4px) scale(1.01); }
 
-  .work-card__body { display: flex; flex-direction: column; gap: var(--s-4); padding: var(--s-5); flex: 1; }
-  .work-card__chips { display: flex; flex-wrap: wrap; gap: var(--s-2); list-style: none; padding: 0; }
-  .work-card__title { font-size: var(--step-2); }
-  .work-card__link { color: var(--ink); text-decoration: none; }
-  .work-card__link::after { content: ""; position: absolute; inset: 0; z-index: 0; }
-  .work-card__link:hover { color: var(--ink); }
+  /* Centred beside the stage on wide cards (equal heights leave shorter bodies room). */
+  .work-card__body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--s-4);
+    min-width: 0;
+    padding: clamp(24px, 3.4vw, 48px) clamp(24px, 3.4vw, 48px) clamp(16px, 2.2vw, 32px);
+  }
+  .work-card__chips { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+  .work-card__title { font-size: clamp(1.5rem, 1.1rem + 1vw, 2rem); font-weight: 660; line-height: 1.12; letter-spacing: -0.028em; }
+  .work-card__link, .work-card__link:hover { color: var(--ink); text-decoration: none; }
   .work-card__link:focus-visible { outline: none; }
-  .work-card:has(.work-card__link:focus-visible) { outline: 2px solid var(--sea-strong); outline-offset: 3px; }
-  .work-card__text { color: var(--ink); }
-  .work-card__links { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-5); margin-top: auto; }
-  .work-card__more { color: var(--sea); font-weight: 600; }
-  .work-card__arrow { display: inline-block; transition: transform var(--dur-2) var(--ease-tide); }
-  .work-card:hover .work-card__arrow, .work-card:focus-within .work-card__arrow { transform: translateX(4px); }
+  .work-card__link::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+  .work-card__desc { color: var(--muted); }
+  .work-card__text { font-size: var(--step-0); }
+  .work-card__body :global(.work-card__spec) { border-top: 1px solid var(--line); }
+
+  .work-card__links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 var(--s-5);
+    min-height: 44px;
+    margin-top: var(--s-2);
+    font-size: 0.9375rem;
+  }
+  .work-card__more { color: var(--accent); font-weight: 580; }
+  .work-card__arrow { display: inline-block; transition: transform var(--dur-2) var(--ease-out); }
+  .work-card:is(:hover, :focus-within) .work-card__arrow { transform: translateX(4px); }
   .work-card__links :global(.work-card__ext) {
     position: relative;
     z-index: 1;
     display: inline-flex;
     align-items: center;
     min-height: 44px;
-    font-family: var(--font-mono);
-    font-size: var(--step--1);
+    color: var(--muted);
+    text-decoration: none;
+  }
+  .work-card__links :global(.work-card__ext:hover) { color: var(--ink); }
+
+  /* Wide: stage left (~58% from 1200px), body right. Height comes from the list (Work.astro). */
+  @media (min-width: 960px) {
+    .work-card { grid-template: none / minmax(0, 1.1fr) minmax(0, 1fr); }
+    .work-card__stage { border: 0; border-right: 1px solid var(--line); }
+  }
+  @media (min-width: 1200px) {
+    .work-card { grid-template-columns: minmax(0, 1.36fr) minmax(0, 1fr); }
   }
 </style>

@@ -1,7 +1,9 @@
 ---
 /**
  * Locale-aware price: "from €1,200 + VAT where due" / "da €1.200 + IVA se dovuta".
- * The VAT suffix follows `site.vatApplies`. Prices never animate.
+ * Big tabular amount; "from" and the per-unit wording sit small and muted on its
+ * baseline, the VAT suffix on its own line below. The suffix follows
+ * `site.vatApplies`. Prices never animate.
  */
 import { site } from '../data/site';
 import { formatPrice } from '../lib/format';
@@ -23,7 +25,7 @@ const t = useStrings(locale).price;
 
 <p class:list={['price-tag', `price-tag--${size}`, className]}>
   <span class="price-tag__value">
-    {from && <span class="price-tag__from">{t.from} </span>}<span class="price-tag__amount">{formatPrice(amount, locale)}</span>{per === 'month' && <span class="price-tag__per">{t.perMonth}</span>}
+    {from && <span class="price-tag__from">{t.from} </span>}<span class="price-tag__amount text-gradient">{formatPrice(amount, locale)}</span>{per === 'month' && <span class="price-tag__per">{t.perMonth}</span>}
   </span>
   {site.vatApplies && <span class="price-tag__vat">{t.vatSuffix}</span>}
 </p>
@@ -33,16 +35,17 @@ const t = useStrings(locale).price;
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 0 var(--s-2);
-    font-family: var(--font-mono);
-    font-variant-numeric: tabular-nums;
+    gap: var(--s-2);
     color: var(--ink);
+    font-variant-numeric: tabular-nums;
     container-type: inline-size;
   }
-  .price-tag__from, .price-tag__per { font-size: var(--step-0); color: var(--muted); }
-  .price-tag__amount { font-weight: 400; letter-spacing: -0.02em; }
-  /* Scales with the card so the VAT suffix stays beside the price in narrow columns. */
-  .price-tag--lg .price-tag__amount { font-size: min(var(--step-5), 10cqi); line-height: 1; }
-  .price-tag--md .price-tag__amount { font-size: var(--step-2); }
-  .price-tag__vat { font-size: var(--step--1); color: var(--muted); white-space: nowrap; }
+  .price-tag__value { white-space: nowrap; }
+  .price-tag__from, .price-tag__per, .price-tag__vat { font-size: var(--step--1); font-weight: 500; color: var(--muted); }
+  .price-tag__per { margin-inline-start: 0.2em; }
+  .price-tag__amount { font-weight: 680; line-height: 1; letter-spacing: -0.045em; }
+  /* Scales with the card so the amount never crowds a narrow column. */
+  .price-tag--lg .price-tag__amount { font-size: min(var(--step-5), 16cqi); }
+  .price-tag--md .price-tag__amount { font-size: var(--step-2); letter-spacing: -0.03em; }
+  .price-tag__vat { flex-basis: 100%; }
 </style>

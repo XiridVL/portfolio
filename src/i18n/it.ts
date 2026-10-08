@@ -21,11 +21,6 @@ export const it: Strings = {
   lang: {
     groupLabel: 'Lingua',
   },
-  theme: {
-    system: 'Tema: sistema. Passa a chiaro',
-    light: 'Tema: chiaro. Passa a scuro',
-    dark: 'Tema: scuro. Usa impostazione di sistema',
-  },
   mobileCta: {
     quote: 'Preventivo gratuito',
     email: 'Scrivi ad Andrea',

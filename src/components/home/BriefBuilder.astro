@@ -3,7 +3,9 @@
  * Mailto brief builder (spec §3.8 / §4.8). Without JS it is a plain
  * `mailto:` form; with JS it validates, composes the subject and body, and
  * opens the visitor's email app. Nothing is sent or stored by the site, and
- * the form never clears.
+ * the form never clears. Styled for the dark card it sits in: services as
+ * selectable tiles with a check mark, filled fields with a clay focus glow,
+ * and errors shown with an icon as well as text.
  *
  * The script also handles the service handoff: `?service=<id>` preselects a
  * radio, an arrival on #contact focuses the message, and "Ask about this"
@@ -68,14 +70,14 @@ const scriptCopy = {
     <div class="brief__field">
       <label for="brief-budget">{form.budgetLabel}</label>
       <select id="brief-budget" name="budget">
-        <option value="">—</option>
+        <option value="">{email.notSpecified}</option>
         {form.budgetOptions.map((o) => <option value={o}>{o}</option>)}
       </select>
     </div>
     <div class="brief__field">
       <label for="brief-start">{form.startLabel}</label>
       <select id="brief-start" name="start">
-        <option value="">—</option>
+        <option value="">{email.notSpecified}</option>
         {form.startOptions.map((o) => <option value={o}>{o}</option>)}
       </select>
     </div>
@@ -99,10 +101,12 @@ const scriptCopy = {
     <p class="brief__error" id="brief-message-error" data-error-for="message" hidden>{form.errors.message}</p>
   </div>
 
-  <p class="brief__helper" id="brief-helper">{form.helper}</p>
-  <p class="brief__long" data-brief-long hidden></p>
-  <Button type="submit" arrow="right" size="lg" aria-describedby="brief-helper">{form.submit}</Button>
-  <p class="brief__status" aria-live="polite" data-brief-status></p>
+  <div class="brief__footer">
+    <p class="brief__helper" id="brief-helper">{form.helper}</p>
+    <p class="brief__long" data-brief-long hidden></p>
+    <Button type="submit" arrow="right" size="lg" aria-describedby="brief-helper" class="brief__submit">{form.submit}</Button>
+    <p class="brief__status" aria-live="polite" data-brief-status></p>
+  </div>
 </form>
 
 <script>
@@ -239,84 +243,144 @@ const scriptCopy = {
 </script>
 
 <style>
-  .brief { display: grid; gap: var(--s-5); }
+  .brief { display: grid; gap: var(--s-6); container-type: inline-size; }
 
+  /* Service tiles */
   .brief__fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
-  .brief__legend {
-    padding: 0;
-    font-weight: 600;
-    color: var(--ink);
-  }
+  .brief__legend { padding: 0; font-size: var(--step-1); font-weight: 620; letter-spacing: -0.014em; line-height: 1.3; color: var(--ink); }
   .brief__hint { font-size: var(--step--1); color: var(--muted); }
+  .brief__legend + .brief__hint { margin-top: 2px; }
   .brief__choices {
     display: grid;
-    gap: var(--s-1) var(--s-4);
+    gap: var(--s-2);
     grid-template-columns: minmax(0, 1fr);
-    margin-top: var(--s-3);
+    margin-top: var(--s-4);
   }
-  @media (min-width: 640px) {
+  @container (min-width: 520px) {
     .brief__choices { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .brief__choice:last-child:nth-child(odd) { grid-column: 1 / -1; }
   }
   .brief__choice {
     display: flex;
     align-items: center;
     gap: var(--s-3);
-    min-height: 44px;
-    padding: var(--s-2) var(--s-3);
-    border: 1px solid var(--line);
-    border-radius: var(--r-btn);
-    background: var(--surface);
+    min-height: 56px;
+    padding: 12px 16px;
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-md);
+    background-color: var(--surface-2);
+    font-size: 0.9375rem;
+    line-height: 1.35;
+    cursor: pointer;
+    transition: background-color var(--dur-1) ease, border-color var(--dur-1) ease, box-shadow var(--dur-2) var(--ease-out);
+  }
+  .brief__choice:hover { background-color: var(--surface-3); border-color: rgb(242 239 232 / .24); }
+  .brief__choice:has(:checked) {
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent);
+    background-image: linear-gradient(var(--accent-tint), var(--accent-tint));
+    color: var(--ink);
+  }
+  .brief__choice:has(:focus-visible) { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  /* Round indicator; a check mark appears inside when chosen. */
+  .brief__choice input {
+    appearance: none;
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 50%;
+    background: var(--surface) center / 14px no-repeat;
+    transition: background-color var(--dur-1) ease, border-color var(--dur-1) ease, transform var(--dur-2) var(--ease-out);
+  }
+  .brief__choice input:checked {
+    border-color: var(--accent);
+    background-color: var(--accent);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5.5 10.5l3 3 6-6.5' fill='none' stroke='%23121212' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+  .brief__choice:active input { transform: scale(0.88); }
+  @supports selector(:has(*)) {
+    .brief__choice input:focus-visible { outline: none; }
+  }
+  .brief__fieldset[aria-invalid="true"] .brief__choice input { border-color: var(--accent); }
+  @media (forced-colors: active) {
+    .brief__choice input { appearance: auto; }
+  }
+
+  /* Fields */
+  .brief__row { display: grid; gap: var(--s-5); grid-template-columns: minmax(0, 1fr); }
+  @container (min-width: 400px) {
+    .brief__row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  .brief__field { display: grid; gap: var(--s-2); align-content: start; min-width: 0; }
+  .brief__row .brief__field { align-content: space-between; } /* selects line up if a label wraps */
+  .brief__field label { font-size: 0.9375rem; font-weight: 560; color: var(--ink); }
+  .brief__field label + .brief__hint { margin-top: -6px; }
+
+  .brief :is(input[type="text"], select, textarea) {
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 16px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-md);
+    background-color: var(--surface-2);
+    color: var(--ink);
+    line-height: 1.4;
+    transition: border-color var(--dur-1) ease, box-shadow var(--dur-2) var(--ease-out);
+  }
+  .brief :is(input[type="text"], select, textarea):hover { border-color: var(--faint); }
+  .brief :is(input[type="text"], select, textarea):focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgb(217 160 102 / .18);
+  }
+  .brief select {
+    appearance: none;
+    padding-right: 44px;
+    background: var(--surface-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='%23A39E93' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") right 16px center / 16px no-repeat;
     cursor: pointer;
   }
-  .brief__choice:hover { border-color: var(--line-strong); }
-  .brief__choice:has(:checked) { border-color: var(--sea); box-shadow: inset 0 0 0 1px var(--sea); }
-  .brief__choice input {
+  .brief textarea { min-height: 9.5rem; resize: vertical; }
+  .brief textarea::placeholder { color: var(--muted); opacity: 1; }
+  .brief [aria-invalid="true"]:is(input, textarea) { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .brief [aria-invalid="true"]:is(input, textarea):focus { box-shadow: 0 0 0 1px var(--accent), 0 0 0 5px rgb(217 160 102 / .18); }
+
+  /* Errors and notes: icon plus text, never colour alone. */
+  .brief__error, .brief__long {
+    display: flex;
+    gap: var(--s-2);
+    align-items: flex-start;
+    font-size: var(--step--1);
+    font-weight: 560;
+    line-height: 1.45;
+    color: var(--ink);
+  }
+  .brief__error { margin-top: var(--s-3); }
+  .brief__field .brief__error { margin-top: 2px; }
+  .brief__error::before, .brief__long::before {
+    content: "";
     flex: none;
     width: 18px;
     height: 18px;
-    margin: 0;
-    accent-color: var(--sea-strong);
+    margin-top: 1px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Ccircle cx='9' cy='9' r='8' fill='%23D9A066'/%3E%3Cpath d='M9 4.8v5' stroke='%23121212' stroke-width='1.8' stroke-linecap='round'/%3E%3Ccircle cx='9' cy='13' r='1.1' fill='%23121212'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .brief__error:not([hidden]) { animation: brief-note var(--dur-2) var(--ease-out); }
+    @keyframes brief-note { from { opacity: 0; transform: translateY(-4px); } }
   }
 
-  .brief__row {
-    display: grid;
-    gap: var(--s-5);
-    grid-template-columns: minmax(0, 1fr);
+  /* Footer: helper line, submit, live status. */
+  .brief__footer { display: grid; gap: var(--s-4); padding-top: var(--s-5); border-top: 1px solid var(--line); }
+  .brief__helper { font-size: var(--step--1); color: var(--muted); max-width: var(--measure); }
+  .brief__long { max-width: var(--measure); font-weight: 400; }
+  .brief :global(.brief__submit) { justify-self: start; }
+  @container (max-width: 519px) {
+    .brief :global(.brief__submit) { justify-self: stretch; white-space: normal; text-align: center; text-wrap: balance; padding-inline: var(--s-5); }
   }
-  @media (min-width: 640px) {
-    .brief__row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  }
-  .brief__field { display: grid; gap: var(--s-2); min-width: 0; }
-  .brief__field label { font-weight: 600; color: var(--ink); }
-  .brief__field label + .brief__hint { margin-top: calc(-1 * var(--s-2)); }
-
-  .brief input[type="text"],
-  .brief select,
-  .brief textarea {
-    width: 100%;
-    min-height: 44px;
-    padding: 10px 12px;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--r-btn);
-    background: var(--surface);
-    color: var(--ink);
-    line-height: 1.4;
-  }
-  .brief textarea { resize: vertical; min-height: 9rem; }
-  .brief textarea::placeholder { color: var(--muted); opacity: 1; }
-  .brief [aria-invalid="true"]:is(input, textarea) { border-color: currentColor; border-width: 2px; }
-  .brief__fieldset[aria-invalid="true"] .brief__choice { border-color: var(--line-strong); }
-
-  .brief__error {
-    margin-top: var(--s-2);
-    padding-left: var(--s-3);
-    border-left: 3px solid var(--buoy-ink);
-    font-size: var(--step--1);
-    font-weight: 600;
-    color: var(--ink);
-  }
-  .brief__helper, .brief__long { font-size: var(--step--1); color: var(--muted); max-width: var(--measure); }
-  .brief__long { color: var(--ink); }
-  .brief :global(.btn) { justify-self: start; }
   .brief__status { min-height: 1.6em; font-size: var(--step--1); color: var(--ink); max-width: var(--measure); }
+  .brief__status:empty { min-height: 0; margin-top: calc(-1 * var(--s-4)); }
 </style>

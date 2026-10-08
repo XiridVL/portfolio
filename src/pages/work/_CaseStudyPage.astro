@@ -1,7 +1,8 @@
 ---
 /**
  * One case study in one locale. Used by /work/[slug]/ and /it/lavori/[slug]/
- * (the underscore keeps this file out of the routes).
+ * (the underscore keeps this file out of the routes). The outcome is a
+ * scroll-lit statement (.sd-lit fills it line by line; plain ivory without support).
  */
 import CaseStudyLayout from '../../components/CaseStudyLayout.astro';
 import type { SpecRowItem } from '../../components/SpecRows.astro';
@@ -58,6 +59,6 @@ const isIt = locale === 'it';
   <p slot="problem">{intro.problem}</p>
   <p slot="built">{study.built}</p>
   <Diagram slot="diagram" />
-  <p slot="outcome">{intro.outcome}</p>
-  {isIt && <p slot="outcome-en">{study.en.outcome}</p>}
+  <p slot="outcome"><span class="sd-lit">{intro.outcome}</span></p>
+  {isIt && <p slot="outcome-en"><span class="sd-lit">{study.en.outcome}</span></p>}
 </CaseStudyLayout>

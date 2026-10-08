@@ -10,17 +10,17 @@ const mailto = `mailto:${site.email}`;
 const legal = [site.vatNumber && `P.IVA ${site.vatNumber}.`, site.businessAddress && `${site.businessAddress}.`]
   .filter(Boolean)
   .join(' ');
-const githubPrivacy = 'https://docs.github.com/it/site-policy/privacy-policies/github-general-privacy-statement';
+const hostPrivacy = 'https://render.com/privacy';
 ---
 
 <BaseLayout title={meta.title} description={meta.description} locale="it" routeKey="privacy">
   <article class="privacy section container container--reading">
     <header class="privacy__header">
-      <h1>Privacy</h1>
-      <p class="eyebrow">Ultimo aggiornamento: <time datetime="2026-10">ottobre 2026</time></p>
+      <h1 class="privacy__title ld-rise">Privacy</h1>
+      <p class="eyebrow ld-rise" style="--i: 1">Ultimo aggiornamento: <time datetime="2026-10">ottobre 2026</time></p>
     </header>
 
-    <div class="prose">
+    <div class="prose privacy__body ld-fade" style="--i: 2">
       <h2>Titolare del trattamento</h2>
       <p>
         Andrea Capelli, sviluppatore web freelance, Rimini, Italia. Contatto: <a href={mailto}>{site.email}</a>.
@@ -35,14 +35,14 @@ const githubPrivacy = 'https://docs.github.com/it/site-policy/privacy-policies/g
 
       <h2>Preferenze sul tuo dispositivo</h2>
       <p>
-        Se scegli un tema o una lingua, la scelta viene salvata nella memoria locale del browser perché il sito la
+        Se scegli una lingua, la scelta viene salvata nella memoria locale del browser perché il sito la
         ricordi. Non lascia mai il tuo dispositivo e puoi cancellarla dalle impostazioni del browser.
       </p>
 
       <h2>Hosting</h2>
       <p>
-        Il sito è ospitato su GitHub Pages. GitHub può trattare dati tecnici come l'indirizzo IP per erogare il sito e
-        mantenerlo sicuro. Vedi <ExternalLink href={githubPrivacy} locale="it">l'informativa privacy di GitHub</ExternalLink>.
+        Il sito è ospitato su Render. Render può trattare dati tecnici come l'indirizzo IP per erogare il sito e
+        mantenerlo sicuro. Vedi <ExternalLink href={hostPrivacy} locale="it">l'informativa privacy di Render</ExternalLink> (in inglese).
       </p>
 
       <h2>Quando mi scrivi</h2>
@@ -65,16 +65,25 @@ const githubPrivacy = 'https://docs.github.com/it/site-policy/privacy-policies/g
 </BaseLayout>
 
 <style>
+  /* Reading column (centred at the measure): big tight title, hairline-separated sections. */
+  .privacy > * { max-width: var(--measure); margin-inline: auto; }
   .privacy__header {
     display: grid;
-    gap: var(--s-3);
-    padding-block-end: var(--s-6);
-    margin-block-end: var(--s-6);
-    border-block-end: 1.5px solid var(--horizon);
+    gap: var(--s-4);
+    padding-block-end: var(--s-7);
+    margin-block-end: var(--s-7);
+    border-block-end: 1px solid var(--line-2);
   }
+  .privacy__title { font-size: var(--step-5); letter-spacing: -0.045em; line-height: 1; }
+  .privacy__body { line-height: 1.7; }
   .privacy .prose h2 {
-    margin-block-start: var(--s-6);
+    margin-block-start: var(--s-7);
+    padding-block-start: var(--s-7);
+    border-block-start: 1px solid var(--line);
     font-size: var(--step-2);
+    font-weight: 640;
+    letter-spacing: -0.022em;
   }
-  .privacy .prose h2:first-child { margin-block-start: 0; }
+  .privacy .prose h2:first-child { margin-block-start: 0; padding-block-start: 0; border: 0; }
+  .privacy .prose h2 + p { margin-block-start: var(--s-4); }
 </style>

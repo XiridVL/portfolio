@@ -1,91 +1,83 @@
-/* Design tokens: "Adriatico d'inverno". Source of truth for every colour, space, radius, type step and duration. */
+/* Design tokens: "Kiln" — warm dark, clay-amber accent. Dark only.
+   Source of truth for every colour, space, radius, type step and duration.
+   Contrast ratios are against --bg (#121212) unless noted. */
 :root {
-  color-scheme: light dark;
-  /* colour — light */
-  --bg: #F3F1EA;            /* salt */
-  --surface: #FFFFFF;       /* cards */
-  --surface-2: #E7E5DC;     /* sea fog: tinted bands, mockup fills, quote panel */
-  --ink: #0E1A1F;           /* 15.7:1 on bg */
-  --muted: #4A5A5E;         /* 6.4:1 on bg, 5.7:1 on surface-2 */
-  --sea: #1F5E66;           /* links, chips, contours — 6.5:1 on bg */
-  --sea-strong: #17505A;    /* primary button bg, focus ring — 8.0:1 on bg */
-  --sea-strong-hover: #0F3F47;
-  --on-sea: #FFFFFF;        /* 9.0:1 on sea-strong */
-  --buoy: #B07400;          /* amber; decorative graphics only (3.5:1 on bg) */
-  --buoy-ink: #8A5A00;      /* amber text e.g. BETA chip — 5.2:1 on bg */
-  --beta-tint: #F7EBCF;     /* BETA chip bg (buoy-ink 5.0:1 on it) */
-  --ok: #1F6E4A;            /* LIVE chip text — 5.5:1 on bg */
-  --ok-tint: #DDEFE5;       /* LIVE chip bg (5.2:1) */
-  --line: rgb(14 26 31 / .12);     /* hairlines, contour SVG */
-  --line-strong: #7A898C;   /* input borders, non-text UI — 3.2:1 on bg, 3.6:1 on surface */
-  --horizon: #0E1A1F;       /* 1.5px horizon rule */
-  --shadow: 0 1px 2px rgb(14 26 31 / .06), 0 8px 24px rgb(14 26 31 / .06);
+  color-scheme: dark;
+
+  /* colour — surfaces */
+  --bg: #121212;
+  --bg-2: #161616;          /* alternate band */
+  --surface: #1A1A1A;       /* cards */
+  --surface-2: #222222;     /* raised: inputs, mockup fills, chips */
+  --surface-3: #2B2B2B;     /* hover on raised */
+
+  /* colour — text */
+  --ink: #F2EFE8;           /* headings, emphasis — 16.3:1 */
+  --text: #D4CFC6;          /* body copy — 12.1:1 */
+  --muted: #A39E93;         /* secondary — 7.1:1, 6.0:1 on surface-2 */
+  --faint: #8A857C;         /* tertiary, small print — 5.0:1 */
+
+  /* colour — accent (clay-amber) */
+  --accent: #D9A066;        /* links, highlights, primary button — 8.2:1 */
+  --accent-hover: #E8B985;
+  --accent-deep: #A8743F;   /* gradients and decoration only */
+  --on-accent: #121212;     /* 8.2:1 on accent */
+  --accent-tint: rgb(217 160 102 / .13);
+  --glow: rgb(217 160 102 / .16);
+
+  /* colour — status */
+  --ok: #7CC99A;            /* LIVE — 9.6:1 */
+  --ok-tint: rgb(124 201 154 / .12);
+
+  /* colour — lines */
+  --line: rgb(242 239 232 / .08);    /* hairlines */
+  --line-2: rgb(242 239 232 / .14);  /* card borders on hover, dividers */
+  --line-strong: #736E66;            /* input borders, non-text UI — 3.6:1, 3.3:1 on surface */
+
+  --shadow: 0 1px 0 rgb(255 255 255 / .04) inset, 0 24px 60px -24px rgb(0 0 0 / .7);
+  --shadow-lg: 0 1px 0 rgb(255 255 255 / .05) inset, 0 40px 120px -40px rgb(0 0 0 / .85);
 
   /* spacing (4px base) */
   --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px; --s-6: 32px;
   --s-7: 48px; --s-8: 64px; --s-9: 96px; --s-10: 128px; --s-11: 160px;
-  --section-pad: clamp(48px, 6vw, 88px);  /* applied top and bottom: ~170px between sections at desktop */
+  --section-pad: clamp(88px, 11vw, 168px);  /* applied top and bottom */
   --gutter: clamp(16px, 4vw, 40px);
-  --container: 1240px;
-  --measure: 64ch;
+  --container: 1200px;
+  --measure: 62ch;
   --reading: 720px;         /* case-study reading column */
-  --breakout: 1040px;       /* diagrams and mockups on case-study pages */
-  --header-h: 64px;
-  --header-h-compact: 56px;
+  --breakout: 1080px;       /* diagrams and mockups on case-study pages */
+  --header-h: 60px;
+  --header-h-compact: 52px;
 
   /* radius */
-  --r-chip: 2px; --r-btn: 2px; --r-card: 6px; --r-frame: 10px; --r-pill: 999px;
+  --r-sm: 8px; --r-md: 14px; --r-lg: 24px; --r-xl: 32px; --r-pill: 999px;
 
   /* type */
-  --font-display: "Bricolage Grotesque Variable", "Bricolage Fallback", system-ui, sans-serif;
-  --font-body: "IBM Plex Sans", "Plex Fallback", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
-  --step--2: 0.75rem;   /* mono labels, +0.08em tracking, uppercase */
+  --font-sans: "Inter Variable", "Inter Fallback", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Instrument Serif", "Serif Fallback", "Iowan Old Style", Georgia, serif; /* italic accents only */
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Segoe UI Mono", Consolas, Menlo, monospace;
+  --step--2: 0.75rem;   /* labels */
   --step--1: 0.875rem;
   --step-0: 1rem;
-  --step-1: 1.125rem;
-  --step-2: 1.375rem;
-  --step-3: 1.75rem;    /* H3 */
-  --step-4: clamp(1.9rem, 1.4rem + 2.2vw, 3rem);    /* H2 */
-  --step-5: clamp(2.2rem, 1.6rem + 3vw, 3.75rem);   /* sounding figures, prices */
-  --step-6: clamp(2.6rem, 1.5rem + 5vw, 5.5rem);    /* H1 */
+  --step-1: 1.1875rem;
+  --step-2: 1.5rem;
+  --step-3: clamp(1.625rem, 1.35rem + 1.1vw, 2.25rem);  /* H3 */
+  --step-4: clamp(2.25rem, 1.45rem + 3.4vw, 4.25rem);   /* H2 */
+  --step-5: clamp(2.75rem, 1.6rem + 5vw, 5.75rem);      /* big figures, prices */
+  --step-6: clamp(3rem, 1.1rem + 7.8vw, 8.25rem);       /* H1 */
 
   /* motion */
-  --ease-tide: cubic-bezier(.2, .7, 0, 1);
-  --dur-1: 150ms; --dur-2: 300ms; --dur-3: 700ms;
+  --ease-out: cubic-bezier(.16, 1, .3, 1);      /* expo-out: arrivals */
+  --ease-in-out: cubic-bezier(.65, 0, .35, 1);  /* exits, morphs */
+  --dur-1: 160ms; --dur-2: 320ms; --dur-3: 800ms; --dur-4: 1200ms;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0A1316; --surface: #12212A; --surface-2: #172A34;
-    --ink: #E6EBE8;        /* 15.6:1 */
-    --muted: #9AABAD;      /* 7.9:1 bg, 6.9:1 surface */
-    --sea: #6CC3C0;        /* 9.1:1 */
-    --sea-strong: #6CC3C0; --sea-strong-hover: #8AD3D0;
-    --on-sea: #0A1316;     /* 9.1:1 */
-    --buoy: #F2B43C; --buoy-ink: #F2B43C; --beta-tint: #2A2410;
-    --ok: #5FD39A; --ok-tint: #0F2A20;
-    --line: rgb(230 235 232 / .12); --line-strong: #61767C;
-    --horizon: #E6EBE8; --shadow: none;
+@media (prefers-contrast: more) {
+  :root {
+    --text: #E6E2DA; --muted: #C9C4BA; --faint: #B3AEA4;
+    --line: rgb(242 239 232 / .28); --line-2: rgb(242 239 232 / .4); --line-strong: #9A958C;
   }
 }
-:root[data-theme="light"] { color-scheme: light; }
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --bg: #0A1316; --surface: #12212A; --surface-2: #172A34;
-  --ink: #E6EBE8; --muted: #9AABAD;
-  --sea: #6CC3C0; --sea-strong: #6CC3C0; --sea-strong-hover: #8AD3D0; --on-sea: #0A1316;
-  --buoy: #F2B43C; --buoy-ink: #F2B43C; --beta-tint: #2A2410;
-  --ok: #5FD39A; --ok-tint: #0F2A20;
-  --line: rgb(230 235 232 / .12); --line-strong: #61767C;
-  --horizon: #E6EBE8; --shadow: none;
-}
-@media (prefers-contrast: more) {
-  :root { --line: rgb(14 26 31 / .35); --muted: #33424A; }
-  :root[data-theme="dark"] { --line: rgb(230 235 232 / .4); --muted: #C2CED0; }
-}
-@media (prefers-contrast: more) and (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --line: rgb(230 235 232 / .4); --muted: #C2CED0; }
-}
+
 html { background: var(--bg); }
-body { background: var(--bg); color: var(--ink); font: 400 var(--step-0)/1.6 var(--font-body); }
+body { background: var(--bg); color: var(--text); font: 400 var(--step-0)/1.6 var(--font-sans); }

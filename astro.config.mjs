@@ -2,9 +2,11 @@
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 
-// SITE_URL: replace with the custom domain once chosen (and add public/CNAME).
-// BASE_PATH: '/' for XiridVL.github.io or a custom domain; '/<repo>/' for a project page.
-const site = process.env.SITE_URL ?? 'https://xiridvl.github.io';
+// SITE_URL: the canonical origin; set it on Render once a custom domain is attached.
+// Without it, Render builds use the service's own URL (RENDER_EXTERNAL_URL), and
+// local builds fall back to the default onrender.com address below.
+// BASE_PATH: '/' unless the site is served under a sub-path ('/<path>/').
+const site = process.env.SITE_URL || process.env.RENDER_EXTERNAL_URL || 'https://andrea-capelli-portfolio.onrender.com';
 const base = process.env.BASE_PATH ?? '/';
 
 export default defineConfig({

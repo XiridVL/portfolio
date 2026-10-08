@@ -64,6 +64,8 @@ const COPY_RULES = [
   { id: 'desktop wording', re: /\boverlays?\b|\breveal(?:s|ed|ing)?\b|\bhack(?:s|ed|ing|er|ers)?\b/gi },
   { id: 'arbiter wording', re: /\bcheat detector\b|\bdetects? cheat|\banti-?cheat\b|\bcatch(?:es)? cheaters\b/gi },
   { id: 'ivpiter status', re: /\bIVPITER\b[^.]{0,60}\b(?:is live|now live|launch(?:ed|es|ing))\b/gi },
+  /** House style: no em dashes in anything a visitor reads (use a comma, colon, full stop or " · "). */
+  { id: 'em dash', re: /—/g },
 ];
 /** "records" is reserved: the apps capture match data, not video (case pages for the Windows apps). */
 const RECORDS_RE = /\brecord(?:s|ed|ing)?\b/gi;
@@ -228,10 +230,10 @@ async function checkDist(vatApplies) {
 }
 
 async function readSiteHost() {
-  const fromEnv = process.env.SITE_URL;
+  const fromEnv = process.env.SITE_URL || process.env.RENDER_EXTERNAL_URL;
   if (fromEnv) return new URL(fromEnv).hostname;
   const config = await readFile(join(ROOT, 'astro.config.mjs'), 'utf8');
-  const fallback = config.match(/SITE_URL\s*\?\?\s*['"]([^'"]+)['"]/)?.[1];
+  const fallback = config.match(/const site = [^;]*['"](https?:\/\/[^'"]+)['"]/)?.[1];
   return fallback ? new URL(fallback).hostname : '';
 }
 
@@ -358,7 +360,7 @@ function checkHead(raw, where, { is404 }) {
 }
 
 async function checkDistFiles() {
-  for (const file of ['robots.txt', 'sitemap-index.xml', '.nojekyll', 'favicon.svg', 'favicon-32.png', 'apple-touch-icon.png']) {
+  for (const file of ['robots.txt', 'sitemap-index.xml', '404.html', 'favicon.svg', 'favicon-32.png', 'apple-touch-icon.png']) {
     if (!(await exists(join(DIST, file)))) fail('build output', `dist/${file}`, 'missing');
   }
   const ogDir = join(DIST, 'og');

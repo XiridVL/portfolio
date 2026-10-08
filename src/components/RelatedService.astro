@@ -1,7 +1,8 @@
 ---
 /**
- * "Related service" card on case studies:
- *   *Need subscriptions, sign-in or SEO done properly?* See C. Payments and integrations → or B. Web app or SaaS MVP →
+ * "Related service" card on case studies: the lead question as a short
+ * statement, then a small "See" label and the linked service names with
+ * nudging arrows ("See C. Payments and integrations → or B. Web app or SaaS MVP →").
  * Links go to the home #services section of the current locale.
  */
 import { getService, type ServiceId } from '../data/services';
@@ -9,7 +10,7 @@ import { sectionHref, useStrings, type Locale } from '../i18n';
 
 interface Props {
   locale: Locale;
-  /** Italic lead question, without trailing punctuation changes. */
+  /** Lead question, rendered as written. */
   lead: string;
   /** One or two service ids, in the order the copy names them. */
   services: ServiceId[];
@@ -21,28 +22,56 @@ const href = sectionHref('services', locale, false);
 const items = services.map((id) => ({ id, label: getService(id).content[locale].relatedLabel }));
 ---
 
-<aside class:list={['related-service card', className]}>
-  <p class="related-service__lead"><em>{lead}</em></p>
+<aside class:list={['related-service card glow-card sd-rise', className]} data-glow>
+  <p class="related-service__lead">{lead}</p>
   <p class="related-service__links">
-    {t.relatedSee}{' '}
+    <span class="related-service__see label">{t.relatedSee}</span>{' '}
     {
       items.map((item, i) => (
-        <>
-          {i > 0 && <> {t.relatedOr} </>}
-          <a href={href} data-service={item.id}><strong>{item.label}</strong>&nbsp;<span aria-hidden="true">→</span></a>
-        </>
+        <span class="related-service__item">
+          {i > 0 && <>{t.relatedOr} </>}
+          <a href={href} data-service={item.id}>
+            <span class="related-service__name">{item.label}</span>&nbsp;<span class="related-service__arrow" aria-hidden="true">→</span>
+          </a>
+        </span>
       ))
     }
   </p>
 </aside>
 
 <style>
-  .related-service {
-    padding: var(--s-5);
-    border-top: 1.5px solid var(--horizon);
-    border-radius: 0 0 var(--r-card) var(--r-card);
+  .related-service { padding: clamp(var(--s-5), 4vw, var(--s-7)); }
+  .related-service__lead {
+    max-width: 32ch;
+    color: var(--ink);
+    font-size: var(--step-2);
+    font-weight: 620;
+    line-height: 1.25;
+    letter-spacing: -0.022em;
+    text-wrap: balance;
   }
-  .related-service__lead { font-size: var(--step-1); }
-  .related-service__links { margin-top: var(--s-2); }
-  .related-service__links a { display: inline-block; padding-block: 10px; }
+  .related-service__links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 var(--s-4);
+    margin-top: var(--s-5);
+    padding-top: var(--s-4);
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+  }
+  .related-service__see { color: var(--muted); }
+  /* "or" travels with the link it introduces, so a wrap never strands it. */
+  .related-service__item { display: inline-flex; align-items: center; gap: 0.4em; }
+  .related-service__links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .related-service__links a:hover .related-service__name { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.25em; }
+  .related-service__arrow { display: inline-block; transition: transform var(--dur-2) var(--ease-out); }
+  .related-service__links a:hover .related-service__arrow,
+  .related-service__links a:focus-visible .related-service__arrow { transform: translateX(4px); }
 </style>

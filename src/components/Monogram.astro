@@ -1,14 +1,16 @@
 ---
+import { site } from '../data/site';
 import { MONOGRAM } from '../lib/monogram';
 /**
- * AC monogram (spec §8.4). The A has no crossbar; the amber horizon line is the
- * crossbar, running through the A's legs and the opening of the C.
+ * AC monogram. Ivory letters (currentColor, --ink); the A has no crossbar of its
+ * own: one clay line runs through its legs and the opening of the C.
  *
  * variant="mark"    solid strokes (header, footer, favicon)
  * variant="lockup"  mark + "Andrea Capelli" wordmark
  * variant="outline" 1px outline strokes (About illustration, ~240px)
  *
  * Decorative by default (aria-hidden). Pass `label` to expose it as an image.
+ * Inside a link, the crossbar sweeps in again on hover and keyboard focus.
  */
 interface Props {
   size?: number;
@@ -16,7 +18,7 @@ interface Props {
   label?: string;
   /** Colour behind the outline variant (used to hollow the strokes). */
   knockout?: string;
-  /** Draw the crossbar on load (hero motion, spec §12.1). */
+  /** Draw the crossbar on load (hero motion). */
   drawCrossbar?: boolean;
   class?: string;
 }
@@ -30,7 +32,7 @@ const {
   class: className,
 } = Astro.props;
 
-const { a: A, c: C, bar: BAR } = MONOGRAM;
+const { a: A, c: C, bar: BAR, letterStroke } = MONOGRAM;
 const unit = 64 / size; // viewBox units per CSS pixel
 const barWidth = variant === 'outline' ? Math.max(1.5 * unit, 1) : size <= 32 ? 6 : 5;
 const a11y = label
@@ -42,57 +44,55 @@ const a11y = label
   variant === 'lockup' ? (
     <span class:list={['monogram-lockup', className]}>
       <svg class="monogram" width={size} height={size} viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false">
-        <g stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+        <g stroke="currentColor" stroke-width={letterStroke} stroke-linecap="round" stroke-linejoin="round">
           <path d={A} />
           <path d={C} />
         </g>
-        <path class:list={['monogram__bar', { 'is-drawing': drawCrossbar }]} d={BAR} stroke="var(--buoy)" stroke-width={barWidth} stroke-linecap="round" pathLength="1" />
+        <path class:list={['monogram__bar', { 'is-drawing': drawCrossbar }]} d={BAR} stroke-width={barWidth} stroke-linecap="round" pathLength="1" />
       </svg>
-      <span class="monogram-lockup__word">Andrea Capelli</span>
+      <span class="monogram-lockup__word">{site.name}</span>
     </span>
   ) : (
     <svg class:list={['monogram', `monogram--${variant}`, className]} width={size} height={size} viewBox="0 0 64 64" fill="none" {...a11y}>
-      {variant === 'outline' ? (
-        <>
-          <g stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
-            <path d={A} />
-            <path d={C} />
-          </g>
-          <g stroke={knockout} stroke-width={9 - 2 * unit} stroke-linecap="round" stroke-linejoin="round">
-            <path d={A} />
-            <path d={C} />
-          </g>
-        </>
-      ) : (
-        <g stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+      <g stroke="currentColor" stroke-width={letterStroke} stroke-linecap="round" stroke-linejoin="round">
+        <path d={A} />
+        <path d={C} />
+      </g>
+      {variant === 'outline' && (
+        <g style={`stroke: ${knockout}`} stroke-width={letterStroke - 2 * unit} stroke-linecap="round" stroke-linejoin="round">
           <path d={A} />
           <path d={C} />
         </g>
       )}
-      <path class:list={['monogram__bar', { 'is-drawing': drawCrossbar }]} d={BAR} stroke="var(--buoy)" stroke-width={barWidth} stroke-linecap="round" pathLength="1" />
+      <path class:list={['monogram__bar', { 'is-drawing': drawCrossbar }]} d={BAR} stroke-width={barWidth} stroke-linecap="round" pathLength="1" />
     </svg>
   )
 }
 
 <style>
-  .monogram { color: var(--ink); overflow: visible; }
-  .monogram__bar { stroke-dasharray: 1; stroke-dashoffset: 0; }
-  .monogram__bar.is-drawing { animation: crossbar-draw var(--dur-3) var(--ease-tide) both; }
+  .monogram { color: var(--ink); overflow: visible; flex: none; }
+  .monogram__bar { stroke: var(--accent); stroke-dasharray: 1; stroke-dashoffset: 0; }
+  .monogram__bar.is-drawing { animation: crossbar-draw var(--dur-3) var(--ease-out) both; }
   @keyframes crossbar-draw {
     from { stroke-dashoffset: 1; }
     to { stroke-dashoffset: 0; }
   }
+  @media (prefers-reduced-motion: no-preference) {
+    :global(a:hover) .monogram__bar,
+    :global(a:focus-visible) .monogram__bar { animation: crossbar-draw var(--dur-3) var(--ease-out); }
+  }
+
   .monogram-lockup {
     display: inline-flex;
     align-items: center;
-    gap: var(--s-2);
+    gap: 10px;
     color: var(--ink);
   }
   .monogram-lockup__word {
-    font-family: var(--font-display);
-    font-weight: 700;
+    font-family: var(--font-sans);
+    font-weight: 640;
     font-size: var(--step-1);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
     line-height: 1;
     white-space: nowrap;
   }

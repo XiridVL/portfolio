@@ -1,9 +1,14 @@
 ---
 /**
- * Hero stream panel (spec §10.1): a terminal-style panel, `lobby.ndjson`, with
- * ten anonymous player rows. Each row starts as a grey skeleton bar and
- * resolves to a sea bar plus a score pill, in sequence over about 1.6s, once,
- * on view. Reduced motion or no script: rows render already filled.
+ * Hero stream panel: a terminal-style panel, `lobby.ndjson`, with ten
+ * anonymous player rows. Each row starts as a grey skeleton (bar track and
+ * pill) and resolves to a clay bar plus a clay-outlined score pill, in
+ * sequence over about 1.6s, once, on view, while a clay hairline under the
+ * title bar tracks the stream. Reduced motion or no script: rows render filled.
+ *
+ * Drawn in HTML rather than SVG so the text stays at a crisp, fixed size from
+ * phones to the 920px hero stage: sizes follow the frame's width (cqi) and the
+ * height follows the rows.
  */
 import Frame from './Frame.astro';
 import type { Locale } from '../../i18n';
@@ -14,46 +19,78 @@ interface Props {
 }
 const { locale, class: className } = Astro.props;
 
-const widths = [168, 214, 132, 236, 190, 150, 222, 120, 204, 176];
 const scores = [61, 74, 58, 82, 69, 77, 55, 88, 64, 71];
 
-// Static parts of a row (skeleton bar, skeleton pill, resolved pill) are drawn
-// once in <defs> and reused; only label, sea bar and score vary per row.
-const defs =
-  '<defs><g id="mks-r"><rect class="k-s2" x="112" y="-5" width="250" height="10" rx="5"/><rect class="k-s2" x="384" y="-10" width="76" height="20" rx="10"/></g><rect id="mks-p" class="k-sf o-by" x="384.5" y="-9.5" width="75" height="19" rx="9.5"/></defs>';
-
-const rows =
-  defs +
-  widths
-    .map((w, i) => {
-      const n = String(i + 1).padStart(2, '0');
-      return `<g style="--i:${i}" transform="translate(0 ${30 + i * 30})"><text x="20" y="4">player ${n}</text><use href="#mks-r"/><rect class="k-sea f" x="112" y="-5" width="${w}" height="10" rx="5"/><g class="p"><use href="#mks-p"/><text class="k-ink mid" x="422" y="4">${scores[i]}</text></g></g>`;
-    })
-    .join('');
+// One string, so the ten rows carry no per-element scoping attributes.
+const rows = scores
+  .map((score, i) => {
+    const n = String(i + 1).padStart(2, '0');
+    return `<li style="--i:${i}"><span>player ${n}</span><span class="t"><span class="f" style="width:${score}%"></span></span><span class="s"><span class="p">${score}</span></span></li>`;
+  })
+  .join('');
 ---
 
 <Frame
   class:list={['mk-stream', className]}
   variant="terminal"
   title="lobby.ndjson"
-  ratio="4 / 3"
+  ratio="auto"
   locale={locale}
   play
   label="Illustration: ten anonymous player rows filling in one by one as streamed results arrive."
 >
-  <svg viewBox="0 0 480 330" focusable="false" set:html={rows} />
+  <div class="mks"><span class="mks__prog"></span><ol class="mks__rows" set:html={rows} /></div>
 </Frame>
 
 <style is:global>
-  .mk-stream .f { transform-box: fill-box; transform-origin: 0 50%; }
+  .mks {
+    position: relative;
+    padding: clamp(10px, 3.4cqi, 32px) clamp(14px, 4.6cqi, 44px);
+    color: var(--muted);
+    font: 400 clamp(10px, 0.375rem + 1.2cqi, 14px) / 1.7 var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .mks__rows { list-style: none; margin: 0; padding: 0; }
+  .mks__rows li {
+    display: grid;
+    grid-template-columns: 6.25em minmax(0, 1fr) 4.5em;
+    align-items: center;
+    gap: clamp(10px, 3cqi, 28px);
+    padding-block: clamp(2px, 1.1cqi - 1px, 10px);
+  }
+  .mks__rows li + li { border-top: 1px solid var(--line); }
+  .mks__rows span { display: block; }
+  /* Skeleton: track and pill in surface-3; the clay bar and the pill cover them. */
+  .mks .t { height: clamp(6px, 0.9cqi, 8px); border-radius: var(--r-pill); background: var(--surface-3); overflow: hidden; }
+  .mks .f { height: 100%; border-radius: inherit; background: var(--accent); transform-origin: 0 50%; }
+  .mks .s { border-radius: var(--r-pill); background: var(--surface-3); }
+  .mks .p {
+    border: 1px solid var(--accent);
+    border-radius: inherit;
+    background: var(--surface);
+    color: var(--ink);
+    text-align: center;
+  }
+  .mks__prog {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent-deep), var(--accent));
+    transform-origin: 0 50%;
+    opacity: 0;
+  }
   @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
     .mk-stream .f { transform: scaleX(0); }
     .mk-stream .p { opacity: 0; }
-    .mk-stream.is-playing .f { animation: mk-stream-fill 420ms var(--ease-tide) forwards; }
-    .mk-stream.is-playing .p { animation: mk-stream-pill 240ms ease forwards; }
-    .mk-stream.is-playing .f,
-    .mk-stream.is-playing .p { animation-delay: calc(var(--i) * 130ms); }
+    .mk-stream.is-playing .f { animation: mk-stream-fill 420ms var(--ease-out) calc(var(--i) * 130ms) forwards; }
+    .mk-stream.is-playing .p { animation: mk-stream-pill 300ms var(--ease-out) calc(var(--i) * 130ms + 160ms) forwards; }
+    .mk-stream.is-playing .mks__prog { animation: mk-stream-prog 1.9s linear forwards; }
   }
   @keyframes mk-stream-fill { to { transform: scaleX(1); } }
-  @keyframes mk-stream-pill { to { opacity: 1; } }
+  @keyframes mk-stream-pill { from { transform: scale(0.88); } to { opacity: 1; transform: none; } }
+  @keyframes mk-stream-prog {
+    from { opacity: 1; transform: scaleX(0); }
+    85% { opacity: 1; transform: scaleX(1); }
+    to { opacity: 0; transform: scaleX(1); }
+  }
 </style>

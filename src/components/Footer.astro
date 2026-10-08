@@ -1,6 +1,9 @@
 ---
 /**
- * Site footer (spec §2.3), identical structure in both locales.
+ * Site footer, identical structure in both locales. Hairline top; identity
+ * (monogram, name, role, coordinates), links and the language switch; the
+ * legal block in small print; then a giant wordmark (aria-hidden) that rises
+ * out of the bottom edge as the page ends.
  * The P.IVA line renders only once `site.vatNumber` is filled in.
  */
 import Monogram from './Monogram.astro';
@@ -20,14 +23,12 @@ const t = useStrings(locale);
 
 <footer class="site-footer">
   <div class="container">
-    <span class="horizon site-footer__rule" aria-hidden="true"></span>
     <div class="site-footer__grid">
       <div class="site-footer__id">
-        <p class="site-footer__name">
-          <Monogram size={28} />
-          <span><strong>{site.name}</strong> — {t.footer.role}</span>
-        </p>
-        <p class="site-footer__coords mono">{t.footer.coords}</p>
+        <Monogram size={34} />
+        <p class="site-footer__name">{site.name}</p>
+        <p>{t.footer.role}</p>
+        <p class="site-footer__coords">{t.footer.coords}</p>
       </div>
 
       <ul class="site-footer__links" role="list">
@@ -41,51 +42,99 @@ const t = useStrings(locale);
     </div>
 
     <div class="site-footer__legal">
-      {site.vatNumber && <p class="mono">{t.footer.vatLabel} {site.vatNumber}</p>}
-      <p>{t.footer.noCookies}</p>
-      <RiotDisclaimer scope="site" locale={locale} />
-      <p>{t.footer.copyright}</p>
+      <div class="site-footer__fine">
+        {site.vatNumber && <p>{t.footer.vatLabel} {site.vatNumber}</p>}
+        <p>{t.footer.noCookies}</p>
+        <RiotDisclaimer scope="site" locale={locale} />
+      </div>
+      <p class="site-footer__copy">{t.footer.copyright}</p>
+    </div>
+
+    <div class="site-footer__mark" aria-hidden="true">
+      <p class="site-footer__word">{site.name}</p>
     </div>
   </div>
 </footer>
 
 <style>
-  .site-footer {
-    padding-block: var(--s-8) var(--s-7);
-    font-size: var(--step--1);
-    color: var(--muted);
-  }
-  /* Room for the sticky mobile CTA bar. */
+  .site-footer { font-size: var(--step--1); color: var(--muted); }
+  /* Room for the floating mobile CTA bar (58px pill + 12px inset) on pages that have it. */
   @media (max-width: 767px) {
-    .site-footer { padding-bottom: calc(var(--s-7) + 72px); }
+    :global(body:has(.mobile-cta)) .site-footer { padding-bottom: calc(70px + env(safe-area-inset-bottom)); }
   }
-  .site-footer__rule { margin-bottom: var(--s-6); }
+
   .site-footer__grid {
     display: grid;
-    gap: var(--s-5);
-    align-items: start;
+    gap: var(--s-7) var(--s-5);
+    padding-block: var(--s-8) var(--s-7);
+    border-top: 1px solid var(--line);
   }
+  .site-footer__id { display: grid; gap: var(--s-1); justify-items: start; }
+  .site-footer__id :global(.monogram) { margin-bottom: var(--s-4); }
+  .site-footer__name { color: var(--ink); font-size: var(--step-1); font-weight: 640; letter-spacing: -0.02em; }
+  .site-footer__coords { margin-top: var(--s-2); color: var(--faint); font-size: var(--step--2); letter-spacing: 0.04em; }
+
+  .site-footer__links { display: grid; grid-template-columns: repeat(2, max-content); column-gap: var(--s-6); }
+  .site-footer__links a { display: inline-flex; align-items: center; min-height: 44px; color: inherit; text-decoration: none; transition: color var(--dur-1); }
+  .site-footer__links a:hover { color: var(--ink); }
+  .site-footer__grid :global(.site-footer__lang) { justify-self: start; }
   @media (min-width: 768px) {
-    .site-footer__grid { grid-template-columns: 1.4fr 1fr auto; }
+    .site-footer__grid { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) auto; align-items: start; }
+    .site-footer__links { grid-template-columns: none; margin-top: -10px; }
   }
-  .site-footer__name {
-    display: flex;
-    align-items: center;
-    gap: var(--s-3);
-    color: var(--ink);
-    font-size: var(--step-0);
-  }
-  .site-footer__coords { margin-top: var(--s-2); letter-spacing: 0.04em; }
-  .site-footer__links { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0 var(--s-4); }
-  .site-footer__links a { display: inline-flex; align-items: center; min-height: 44px; }
-  .site-footer__grid :global(.site-footer__lang) { margin-left: -12px; }
+
   .site-footer__legal {
-    margin-top: var(--s-6);
+    display: grid;
+    gap: var(--s-4) var(--s-8);
     padding-top: var(--s-5);
     border-top: 1px solid var(--line);
-    display: grid;
-    gap: var(--s-2);
-    max-width: var(--measure);
+    color: var(--faint);
+    font-size: 0.8125rem;
   }
-  .site-footer__legal :global(.riot-disclaimer) { font-size: inherit; }
+  .site-footer__fine { display: grid; gap: var(--s-2); max-width: var(--measure); }
+  .site-footer__legal :global(.riot-disclaimer) { font-size: inherit; color: inherit; }
+  .site-footer__copy { color: var(--muted); }
+  @media (min-width: 960px) {
+    .site-footer__legal { grid-template-columns: minmax(0, 1fr) auto; }
+    .site-footer__copy { max-width: 32ch; text-align: end; }
+  }
+
+  /* Giant wordmark, sized to the container width (cqi) and clipped at the bottom
+     edge of the page. overflow: clip (not hidden) so the mark is no scroll container;
+     view-timeline-inset 0 ignores the scroll padding the mobile CTA bar adds. */
+  .site-footer__mark {
+    container-type: inline-size;
+    overflow: hidden;
+    overflow: clip;
+    margin-top: var(--s-8);
+    view-timeline-name: --footer-mark;
+    view-timeline-inset: 0;
+  }
+  .site-footer__word {
+    padding-top: 0.06em;
+    margin-bottom: -0.07em;
+    font-size: min(14.5vw, 189px);
+    font-size: 15.8cqi;
+    font-weight: 700;
+    letter-spacing: -0.06em;
+    line-height: .8;
+    white-space: nowrap;
+    background: linear-gradient(180deg, rgb(242 239 232 / .3) 8%, rgb(242 239 232 / .08) 60%, transparent 95%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    user-select: none;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .site-footer__word {
+        animation: footer-rise linear both;
+        animation-timeline: --footer-mark;
+        animation-range: entry 0% entry 95%;
+      }
+      @keyframes footer-rise {
+        from { opacity: 0; transform: translateY(45%); }
+      }
+    }
+  }
 </style>

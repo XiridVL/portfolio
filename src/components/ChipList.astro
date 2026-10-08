@@ -1,20 +1,69 @@
 ---
-/** A wrapping list of tech chips (case-study Stack, home tech line). */
+/**
+ * Tech chips ("Astro", "Stripe").
+ *   default   a wrapping list (case-study Stack)
+ *   marquee   one row that scrolls sideways without end and pauses on hover
+ *             (home tech line). The first <ul> is the real list; the copies
+ *             that make the loop seamless are aria-hidden and inert. Under
+ *             reduced motion only the real list shows, wrapped and centred.
+ */
 import Chip from './Chip.astro';
 
 interface Props {
   items: string[];
   /** Accessible name for the list, if it has no visible heading nearby. */
   label?: string;
+  marquee?: boolean;
   class?: string;
 }
-const { items, label, class: className } = Astro.props;
+const { items, label, marquee = false, class: className } = Astro.props;
+// The track slides by half its length (two copies), so half must outrun the
+// widest window (1200px container) even when the list itself is shorter.
+const copies = marquee ? [1, 2, 3] : [];
 ---
 
-<ul class:list={['chip-list', className]} role="list" aria-label={label}>
-  {items.map((item) => <li><Chip text={item} /></li>)}
-</ul>
+{
+  marquee ? (
+    <div class:list={['chip-marquee', className]}>
+      <div class="chip-marquee__track">
+        <ul class="chip-list" role="list" aria-label={label}>
+          {items.map((item) => <li><Chip text={item} /></li>)}
+        </ul>
+        {copies.map(() => (
+          <ul class="chip-list chip-marquee__copy" aria-hidden="true" inert>
+            {items.map((item) => <li><Chip text={item} /></li>)}
+          </ul>
+        ))}
+      </div>
+    </div>
+  ) : (
+    <ul class:list={['chip-list', className]} role="list" aria-label={label}>
+      {items.map((item) => <li><Chip text={item} /></li>)}
+    </ul>
+  )
+}
 
 <style>
   .chip-list { display: flex; flex-wrap: wrap; gap: var(--s-2); list-style: none; padding: 0; margin: 0; }
+
+  .chip-marquee .chip-list { justify-content: center; }
+  .chip-marquee__copy { display: none; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .chip-marquee {
+      overflow: hidden;
+      -webkit-mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
+      mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
+    }
+    .chip-marquee__track {
+      display: flex;
+      width: max-content;
+      animation: chip-marquee 64s linear infinite;
+    }
+    .chip-marquee:hover .chip-marquee__track { animation-play-state: paused; }
+    /* Each copy ends with one gap, so two copies are exactly half the track. */
+    .chip-marquee .chip-list { flex-wrap: nowrap; gap: var(--s-3); padding-inline-end: var(--s-3); }
+    .chip-marquee__copy { display: flex; }
+    @keyframes chip-marquee { to { transform: translateX(-50%); } }
+  }
 </style>

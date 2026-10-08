@@ -1,9 +1,9 @@
 ---
 /**
- * vStats Desktop lobby view (spec §10.3): window titled "vStats Desktop · beta",
- * a 2×5 roster of anonymous "Player N" rows with party brackets (rows 2–3 and
- * 7–8), plain rank pills and score pills, a "Match found" toast and a tray
- * glyph. Score pills fill in sequence once on view.
+ * vStats Desktop lobby view: window titled "vStats Desktop · beta", a 2×5
+ * roster of anonymous "Player N" rows on raised cards with clay party brackets
+ * (rows 2–3 and 7–8), grey rank pills and clay score pills, a "Match found"
+ * toast and a tray glyph. Score pills fill in sequence once on view.
  */
 import Frame from './Frame.astro';
 import type { Locale } from '../../i18n';
@@ -17,9 +17,10 @@ const { locale, class: className } = Astro.props;
 const scores = [72, 64, 64, 81, 57, 69, 76, 76, 60, 85];
 
 // Static row chrome (card, avatar, rank pill, score pill track) is drawn once
-// in <defs> and reused; name, score fill and score vary per row.
+// in <defs> and reused; name, score fill and score vary per row. <use> clones
+// don't match the .mk descendant selectors, so defs carry inline token styles.
 const defs =
-  '<defs><g id="mkd-r"><rect class="k-sf o-ln" x=".5" y=".5" width="263" height="43" rx="6"/><circle class="k-s2" cx="22" cy="22" r="10"/><rect class="k-s2" x="136" y="12" width="52" height="20" rx="10"/><rect class="k-s2" x="196" y="12" width="56" height="20" rx="10"/></g></defs>';
+  '<defs><g id="mkd-r" style="fill:rgb(242 239 232 / .08)"><rect style="fill:var(--surface-2)" width="264" height="44" rx="8"/><circle cx="22" cy="22" r="10"/><rect x="136" y="12" width="52" height="20" rx="10"/><rect x="196" y="12" width="56" height="20" rx="10"/></g></defs>';
 
 const roster =
   defs +
@@ -27,21 +28,21 @@ const roster =
     .map((score, i) => {
       const x = i < 5 ? 40 : 340;
       const y = 80 + (i % 5) * 52;
-      return `<g style="--i:${i}" transform="translate(${x} ${y})"><use href="#mkd-r"/><text class="k-ink" x="42" y="26">Player ${i + 1}</text><rect class="k-sea f" x="196" y="12" width="56" height="20" rx="10"/><text class="k-on mid p" x="224" y="26">${score}</text></g>`;
+      return `<g style="--i:${i}" transform="translate(${x} ${y})"><use href="#mkd-r"/><text class="k-ink" x="42" y="26">Player ${i + 1}</text><rect class="k-ac f" x="196" y="12" width="56" height="20" rx="10"/><text class="k-on mid p" x="224" y="26">${score}</text></g>`;
     })
     .join('');
 
 // Party brackets: rows 2–3 (left column) and 7–8 (right column).
 const brackets = [24, 324]
-  .map((x) => `<path class="o-sea br" d="M${x + 10} 140h-6v80h6"/>`)
+  .map((x) => `<path class="o-ac br" d="M${x + 10} 140h-6v80h6"/>`)
   .join('');
 
 const svg = [
   roster,
   brackets,
   // Toast
-  '<rect class="k-sf o-ls" x="440.5" y="16.5" width="175" height="43" rx="6"/>',
-  '<circle class="k-sea" cx="462" cy="38" r="5"/>',
+  '<rect class="k-s3 o-ln" x="440.5" y="16.5" width="175" height="43" rx="10"/>',
+  '<circle class="k-ac" cx="462" cy="38" r="5"/>',
   '<text class="k-ink" x="478" y="42">Match found</text>',
   // Status strip and tray glyph
   '<path class="o-ln" d="M24 352.5h592"/>',
@@ -66,7 +67,7 @@ const svg = [
   @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
     .mk-desktop .f { transform: scaleX(0); }
     .mk-desktop .p { opacity: 0; }
-    .mk-desktop.is-playing .f { animation: mk-desktop-fill 360ms var(--ease-tide) forwards; }
+    .mk-desktop.is-playing .f { animation: mk-desktop-fill 360ms var(--ease-out) forwards; }
     .mk-desktop.is-playing .p { animation: mk-desktop-show 200ms ease forwards; }
     .mk-desktop.is-playing .f,
     .mk-desktop.is-playing .p { animation-delay: calc(120ms + var(--i) * 110ms); }

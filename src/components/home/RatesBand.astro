@@ -1,6 +1,10 @@
 ---
-/** Hourly and day rates with payment terms (spec §3.4), under a horizon rule. */
-import HorizonRule from '../HorizonRule.astro';
+/**
+ * Hourly and day rates with payment terms, as a band of big tabular figures
+ * between hairlines. The lead copy ("€45/hour · €340/day.") is split into one
+ * figure per rate; its separators stay in the text for screen readers, so the
+ * paragraph still reads exactly as written.
+ */
 import { homeCopy } from '../../i18n/home';
 import type { Locale } from '../../i18n';
 
@@ -9,31 +13,65 @@ interface Props {
 }
 const { locale } = Astro.props;
 const copy = homeCopy[locale].services.rates;
+
+const end = copy.lead.endsWith('.') ? '.' : '';
+const facts = copy.lead
+  .slice(0, copy.lead.length - end.length)
+  .split(' · ')
+  .map((fact) => {
+    const at = fact.indexOf('/');
+    return at > 0 ? { amount: fact.slice(0, at), unit: fact.slice(at) } : { amount: fact, unit: '' };
+  });
 ---
 
-<div class="rates-band">
-  <HorizonRule />
-  <p class="rates-band__text">
-    <strong class="rates-band__lead mono">{copy.lead}</strong>
-    {copy.text}
+<div class="rates sd-rise">
+  <p class="rates__lead">
+    {
+      facts.map((fact, i) => (
+        <>
+          {i > 0 && <span class="visually-hidden"> · </span>}
+          <span class="rates__fact">
+            <span class="rates__amount text-gradient">{fact.amount}</span>
+            {fact.unit && <span class="rates__unit">{fact.unit}</span>}
+          </span>
+        </>
+      ))
+    }
+    {end && <span class="visually-hidden">{end}</span>}
   </p>
+  <p class="rates__text">{copy.text}</p>
 </div>
 
 <style>
-  .rates-band__text {
-    max-width: 80ch;
-    padding-top: var(--s-4);
-    color: var(--muted);
+  .rates {
+    display: grid;
+    gap: var(--s-5);
+    margin-top: clamp(48px, 6vw, 80px);
+    padding-block: clamp(28px, 4vw, 44px);
+    border-block: 1px solid var(--line);
   }
-  .rates-band__lead {
-    display: block;
-    margin-bottom: var(--s-2);
-    font-size: var(--step-3);
-    font-weight: 400;
-    letter-spacing: -0.01em;
-    color: var(--ink);
+  .rates__lead { display: flex; flex-wrap: wrap; row-gap: var(--s-4); }
+  .rates__fact {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.2em;
+    padding-inline: clamp(20px, 3vw, 40px);
+    white-space: nowrap;
   }
-  @media (min-width: 768px) {
-    .rates-band__lead { display: inline; margin: 0 var(--s-2) 0 0; font-size: var(--step-2); }
+  .rates__fact:first-child { padding-inline-start: 0; }
+  .rates__fact ~ .rates__fact { border-inline-start: 1px solid var(--line-2); }
+  .rates__amount { font-size: var(--step-4); font-weight: 680; line-height: 1; letter-spacing: -0.045em; font-variant-numeric: tabular-nums; }
+  .rates__unit { font-size: var(--step-0); font-weight: 500; color: var(--muted); }
+  .rates__text { max-width: 56ch; color: var(--muted); }
+  @media (min-width: 900px) {
+    .rates { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 0; }
+    .rates__text {
+      align-self: stretch;
+      display: flex;
+      align-items: center;
+      max-width: calc(56ch + clamp(20px, 3vw, 40px));
+      padding-inline-start: clamp(20px, 3vw, 40px);
+      border-inline-start: 1px solid var(--line-2);
+    }
   }
 </style>

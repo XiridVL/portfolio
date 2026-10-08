@@ -1,12 +1,15 @@
 ---
 /**
- * Window frame shared by the mockups (spec §10): surface body, surface-2 title
- * bar, three dots, radius --r-frame. The root is the labelled image
- * (role="img" + aria-label); everything inside is hidden from assistive tech.
+ * Window frame shared by the mockups: surface body, surface-2 title bar, three
+ * neutral grey dots, hairline border, soft deep shadow. The root is the
+ * labelled image (role="img" + aria-label); everything inside is hidden from
+ * assistive tech.
  *
- * The SVG drawing goes in the default slot. Drawings use the short utility
- * classes below (k-* fills, o-* outlines) so they follow the theme tokens.
- * `play` marks the frame for its once-on-view micro-state (spec §12.4).
+ * The drawing goes in the default slot (inline SVG; the hero stream panel is
+ * HTML so its text stays crisp at any size). SVG drawings use the short utility
+ * classes below (k-* fills, o-* outlines) so they follow the tokens:
+ * primary data in clay, secondary data in faint ivory, labels muted.
+ * `play` marks the frame for its once-on-view micro-state (play.ts).
  */
 import type { Locale } from '../../i18n';
 
@@ -49,30 +52,34 @@ const { label, title, variant = 'window', ratio = '16 / 10', locale, play = fals
     display: flex;
     flex-direction: column;
     width: 100%;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-lg);
     container-type: inline-size;
   }
   .mk__bar { flex: none; }
   .mk__title {
     min-width: 0;
-    margin-inline-start: 8px;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    letter-spacing: 0.01em;
   }
+  /* Window and browser titles sit optically centred: end padding (window) or
+     an empty end spacer as wide as the dots (browser) balances the dots, and
+     flex keeps a narrow address pill from ever running over them. */
+  .mk--window .mk__title { margin-inline: auto; padding-inline-end: 44px; }
   .mk--browser .mk__title {
-    flex: 1;
-    max-width: 22em;
-    margin-inline: 12px auto;
-    padding: 1px 10px;
-    background: var(--surface);
-    border: 1px solid var(--line);
+    flex: 0 1 18em;
+    margin-inline: auto;
+    padding: 1px 12px;
+    background: rgb(242 239 232 / .06);
     border-radius: var(--r-pill);
     line-height: 18px;
-    color: var(--ink);
+    text-align: center;
   }
-  .mk--window .mk__title { margin-inline: auto; padding-inline-end: 44px; }
-  .mk--terminal .mk__bar { background: var(--surface-2); }
+  .mk--browser .mk__bar::after { content: ""; flex: 0 1 39px; }
+  .mk--terminal .mk__title { margin-inline-start: 8px; font-family: var(--font-mono); font-weight: 400; }
 
   .mk__body {
     flex: 1;
@@ -81,24 +88,24 @@ const { label, title, variant = 'window', ratio = '16 / 10', locale, play = fals
   }
   .mk__body > svg { width: 100%; height: 100%; }
 
-  /* Drawing vocabulary: token colours only, so both themes work. */
-  .mk text { font-family: var(--font-mono); font-size: 12px; fill: var(--muted); }
+  /* Drawing vocabulary: token colours only. */
+  .mk text { font-family: var(--font-sans); font-size: 12px; font-weight: 500; fill: var(--muted); }
   /* o-* outlines come first so a k-* fill on the same element wins. */
-  .mk .o-ln { fill: none; stroke: var(--line); }
-  .mk .o-ls { fill: none; stroke: var(--line-strong); }
-  .mk .o-sea { fill: none; stroke: var(--sea); }
-  .mk .o-by { fill: none; stroke: var(--buoy); }
-  .mk .k-sea { fill: var(--sea); }
+  .mk .o-ln { fill: none; stroke: var(--line-2); }
+  .mk .o-ls { fill: none; stroke: rgb(242 239 232 / .24); }
+  .mk .o-ac { fill: none; stroke: var(--accent); }
+  .mk .k-ac { fill: var(--accent); }
+  .mk .k-iv { fill: rgb(242 239 232 / .13); }
   .mk .k-s2 { fill: var(--surface-2); }
+  .mk .k-s3 { fill: var(--surface-3); }
   .mk .k-sf { fill: var(--surface); }
   .mk .k-ink { fill: var(--ink); }
-  .mk .k-ls { fill: var(--line-strong); }
-  .mk .k-on { fill: var(--on-sea); }
+  .mk .k-on { fill: var(--on-accent); }
   .mk .mid { text-anchor: middle; }
   .mk .end { text-anchor: end; }
   /* The 640-unit card drawings: below ~530px wide their 12-unit labels would
      render under 10px, so show the shapes only (the frame keeps its aria-label). */
   @container (max-width: 529px) {
-    .mk:not(.mk-stream) .mk__body text { display: none; }
+    .mk .mk__body text { display: none; }
   }
 </style>

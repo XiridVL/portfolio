@@ -1,8 +1,10 @@
 ---
 /**
- * "Doesn't fit a box?" panel (spec §3.4): tinted surface, dashed sea border,
- * horizon rule on top. The button preselects "custom" in the brief builder.
+ * "Doesn't fit a box?" feature panel under the service cards: gradient hairline
+ * ring, a slow ember glow inside, the copy on the left and the call to action on
+ * the right (stacked on phones). The button preselects "custom" in the brief builder.
  */
+import AccentText from '../AccentText.astro';
 import Button from '../Button.astro';
 import { site } from '../../data/site';
 import { serviceHref, type Locale } from '../../i18n';
@@ -15,11 +17,14 @@ const { locale } = Astro.props;
 const copy = homeCopy[locale].services.custom;
 ---
 
-<aside class="quote-panel" aria-labelledby="custom-quote-title">
-  <h3 id="custom-quote-title" class="quote-panel__title">{copy.title}</h3>
-  <p class="quote-panel__text measure">{copy.text}</p>
+<aside class="quote-panel ring-accent sd-scale" aria-labelledby="custom-quote-title">
+  <span class="quote-panel__ember ember ember--drift" aria-hidden="true"></span>
+  <div class="quote-panel__copy">
+    <h3 id="custom-quote-title" class="quote-panel__title"><AccentText text={copy.title} accent={copy.accent} /></h3>
+    <p class="quote-panel__text">{copy.text}</p>
+  </div>
   <div class="quote-panel__actions">
-    <Button href={serviceHref('custom', locale)} arrow="right" data-service-link="custom">{copy.button}</Button>
+    <Button href={serviceHref('custom', locale)} size="lg" arrow="right" data-service-link="custom">{copy.button}</Button>
     <p class="quote-panel__email">
       {copy.orEmail} <a href={`mailto:${site.email}`}>{site.email}</a>
     </p>
@@ -29,30 +34,27 @@ const copy = homeCopy[locale].services.custom;
 <style>
   .quote-panel {
     position: relative;
+    isolation: isolate;
+    overflow: hidden;
     display: grid;
-    gap: var(--s-4);
-    padding: var(--s-6) var(--s-5);
-    background: var(--surface-2);
-    border: 1.5px dashed var(--sea);
-    border-radius: 0 0 var(--r-card) var(--r-card);
+    gap: var(--s-6);
+    margin-top: 20px;
+    padding: clamp(28px, 5vw, 64px);
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-lg);
   }
-  .quote-panel::before {
-    content: "";
-    position: absolute;
-    inset: -1.5px -1.5px auto;
-    border-top: 1.5px solid var(--horizon);
+  .quote-panel__ember { width: min(780px, 140%); inset: auto -24% -78% auto; }
+  .quote-panel__title { max-width: 18ch; font-size: clamp(1.75rem, 1.2rem + 2vw, 2.75rem); line-height: 1.08; letter-spacing: -0.03em; }
+  .quote-panel__text { max-width: 54ch; margin-top: var(--s-4); color: var(--muted); }
+  .quote-panel__actions { display: grid; gap: var(--s-2); justify-items: start; }
+  .quote-panel__actions :global(.btn) { white-space: normal; text-align: center; }
+  .quote-panel__email { font-size: var(--step--1); color: var(--muted); overflow-wrap: anywhere; }
+  .quote-panel__email a { display: inline-block; padding-block: 11px; }
+  @media (max-width: 599px) {
+    .quote-panel__actions { justify-items: stretch; }
   }
-  @media (min-width: 768px) {
-    .quote-panel { padding: var(--s-7) var(--s-6); }
+  @media (min-width: 900px) {
+    .quote-panel { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); align-items: center; gap: var(--s-8); }
+    .quote-panel__actions { justify-items: center; text-align: center; }
   }
-  .quote-panel__title { font-size: var(--step-3); }
-  .quote-panel__actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--s-3) var(--s-5);
-    margin-top: var(--s-2);
-  }
-  .quote-panel__email { color: var(--muted); overflow-wrap: anywhere; }
-  .quote-panel__email a { display: inline-block; padding-block: 10px; }
 </style>

@@ -1,10 +1,13 @@
 ---
 /**
- * Shared case-study template (spec §5 and §6). Structure:
- *  1 breadcrumb · 2 chips, H1, one-liner · 3 spec sheet · 4 hero mockup
+ * Shared case-study template. Structure:
+ *  1 breadcrumb pill + chips · 2 H1, one-liner · 3 spec sheet card · 4 hero mockup on a stage
  *  5 problem · 6 what I built · 7 highlights · 8 how it works (diagram)
  *  9 stack · 10 by the numbers · 11 outcome · 12 related service
- *  13 CTA band · 14 previous/next · 15 Riot disclaimer (project variant)
+ *  13 CTA panel · 14 previous/next · 15 Riot disclaimer (project variant)
+ *
+ * Width rhythm: the intro, hero, highlights, diagram, CTA and nav use the
+ * 1080px breakout; prose sections use the 720px reading column.
  *
  * Italian pages (locale="it"): Italian H1/one-liner/spec/problem/outcome, then a
  * divider "Approfondimento tecnico (in inglese)" and the English body
@@ -59,6 +62,11 @@ const project = getProject(slug);
 const vt = transitionNames(slug);
 const workHref = sectionHref('work', locale, false);
 
+/* "vStats: a stats and …" → the name in ivory, the descriptor in warm grey. Same text, two tones. */
+const colon = h1.indexOf(': ');
+const h1Name = colon > 0 ? h1.slice(0, colon + 1) : '';
+const h1Rest = colon > 0 ? h1.slice(colon + 2) : h1;
+
 const jsonLd = caseStudyJsonLd({
   slug,
   locale,
@@ -71,105 +79,117 @@ const hasOutcomeEn = Astro.slots.has('outcome-en');
 ---
 
 <BaseLayout title={title} description={description} locale={locale} routeKey={slug} ogType="article" jsonLd={jsonLd}>
-  <article class="case-study" data-case-study>
-    <header class="case-study__intro container container--reading">
-      <nav class="case-study__crumbs" aria-label={t.breadcrumbLabel}>
-        <ol role="list">
-          <li><a href={workHref}>{t.breadcrumbRoot}</a></li>
-          <li><span aria-hidden="true">/</span> <span aria-current="page">{project.name}</span></li>
-        </ol>
-      </nav>
-      <ul class="case-study__chips" role="list">
-        {chips.map((chip) => <li><StatusChip kind={chip.kind} text={chip.text} /></li>)}
-      </ul>
-      <h1 class="case-study__title" style={`view-transition-name: ${vt.title}`}>{h1}</h1>
-      <p class="case-study__oneliner lead">{oneLiner}</p>
-      <SpecRows rows={spec} locale={locale} label={t.specLabel} class="case-study__spec" />
+  <article class="cs" data-case-study>
+    <header class="cs-intro container container--breakout">
+      <div class="cs-intro__meta">
+        <nav class="cs-crumbs ld-rise" aria-label={t.breadcrumbLabel}>
+          <ol role="list">
+            <li><a href={workHref}>{t.breadcrumbRoot}</a></li>
+            <li><span class="cs-crumbs__sep" aria-hidden="true">/</span> <span aria-current="page">{project.name}</span></li>
+          </ol>
+        </nav>
+        <ul class="cs-chips ld-rise" role="list" style="--i: 1">
+          {chips.map((chip) => <li><StatusChip kind={chip.kind} text={chip.text} /></li>)}
+        </ul>
+      </div>
+      <h1 class="cs-title" style={`view-transition-name: ${vt.title}`}>
+        {h1Name && <span class="cs-title__name">{h1Name}</span>}{h1Name && ' '}<span class="cs-title__rest">{h1Rest}</span>
+      </h1>
+      <div class="cs-intro__row">
+        <p class="cs-lead lead ld-rise" style="--i: 2">{oneLiner}</p>
+        <div class="cs-spec card ld-rise" style="--i: 3">
+          <p class="cs-spec__label label" aria-hidden="true">{t.specLabel}</p>
+          <SpecRows rows={spec} locale={locale} label={t.specLabel} />
+        </div>
+      </div>
     </header>
 
     {
       Astro.slots.has('mockup') && (
-        <div class="case-study__hero container container--breakout">
-          <div class="case-study__mockup" style={`view-transition-name: ${vt.mock}`}>
-            <slot name="mockup" />
+        <div class="cs-hero container container--breakout">
+          <div class="cs-stage sd-tilt">
+            <span class="cs-stage__glow ember" aria-hidden="true" />
+            <div class="cs-stage__mockup" style={`view-transition-name: ${vt.mock}`}>
+              <slot name="mockup" />
+            </div>
           </div>
         </div>
       )
     }
 
-    <div class="case-study__body container container--reading">
-      <section class="case-study__section" aria-labelledby="cs-problem">
-        <h2 id="cs-problem">{t.problem}</h2>
-        <div class="prose"><slot name="problem" /></div>
-      </section>
-
-      {
-        isIt && (
-          <section class="case-study__section" aria-labelledby="cs-outcome-local">
-            <h2 id="cs-outcome-local">{t.outcome}</h2>
-            <div class="prose"><slot name="outcome" /></div>
-          </section>
-        )
-      }
-      {
-        isIt && (
-          <p class="case-study__divider">
-            <span class="buoy-dot" aria-hidden="true" />
-            <span class="label">{t.deepDive}</span>
-          </p>
-        )
-      }
-    </div>
-
-    <div class="case-study__body container container--reading" lang={isIt ? 'en' : undefined}>
-      <section class="case-study__section" aria-labelledby="cs-built">
-        <h2 id="cs-built">{tEn.built}</h2>
-        <div class="prose"><slot name="built" /></div>
-      </section>
-
-      <section class="case-study__section" aria-labelledby="cs-highlights">
-        <h2 id="cs-highlights">{tEn.highlights}</h2>
-        <Highlights items={highlights} />
-      </section>
-    </div>
+    <section class="cs-sec container container--reading" aria-labelledby="cs-problem">
+      <h2 id="cs-problem" class="cs-sec__title sd-rise">{t.problem}</h2>
+      <div class="cs-prose prose"><slot name="problem" /></div>
+    </section>
 
     {
-      Astro.slots.has('diagram') && (
-        <section class="case-study__section case-study__how container container--breakout" aria-labelledby="cs-how" lang={isIt ? 'en' : undefined}>
-          <h2 id="cs-how">{tEn.how}</h2>
-          <slot name="diagram" />
+      isIt && (
+        <section class="cs-sec container container--reading" aria-labelledby="cs-outcome-local">
+          <h2 id="cs-outcome-local" class="cs-sec__title sd-rise">{t.outcome}</h2>
+          <div class="cs-prose cs-prose--statement prose"><slot name="outcome" /></div>
         </section>
       )
     }
+    {
+      isIt && (
+        <p class="cs-divider container container--reading">
+          <span class="cs-divider__pill">
+            <span class="dot" aria-hidden="true" />
+            <span>{t.deepDive}</span>
+          </span>
+        </p>
+      )
+    }
 
-    <div class="case-study__body container container--reading" lang={isIt ? 'en' : undefined}>
-      <section class="case-study__section" aria-labelledby="cs-stack">
-        <h2 id="cs-stack">{tEn.stack}</h2>
-        <ChipList items={stack} />
+    <div class="cs-body" lang={isIt ? 'en' : undefined}>
+      <section class="cs-sec container container--reading" aria-labelledby="cs-built">
+        <h2 id="cs-built" class="cs-sec__title sd-rise">{tEn.built}</h2>
+        <div class="cs-prose prose"><slot name="built" /></div>
       </section>
 
-      <section class="case-study__section" aria-labelledby="cs-numbers">
-        <h2 id="cs-numbers">{tEn.numbers}</h2>
+      <section class="cs-sec cs-sec--wide container container--breakout" aria-labelledby="cs-highlights">
+        <h2 id="cs-highlights" class="cs-sec__title sd-rise">{tEn.highlights}</h2>
+        <Highlights items={highlights} />
+      </section>
+
+      {
+        Astro.slots.has('diagram') && (
+          <section class="cs-sec cs-sec--wide container container--breakout" aria-labelledby="cs-how">
+            <h2 id="cs-how" class="cs-sec__title sd-rise">{tEn.how}</h2>
+            <slot name="diagram" />
+          </section>
+        )
+      }
+
+      <section class="cs-sec container container--reading" aria-labelledby="cs-stack">
+        <h2 id="cs-stack" class="cs-sec__title sd-rise">{tEn.stack}</h2>
+        <div class="sd-rise" style="--i: 1"><ChipList items={stack} /></div>
+      </section>
+
+      <section class="cs-sec container container--reading" aria-labelledby="cs-numbers">
+        <h2 id="cs-numbers" class="cs-sec__title sd-rise">{tEn.numbers}</h2>
         <Soundings items={numbers} variant="tiles" />
       </section>
 
-      <section class="case-study__section" aria-labelledby="cs-outcome">
-        <h2 id="cs-outcome">{tEn.outcome}</h2>
-        <div class="prose">
+      <section class="cs-sec container container--reading" aria-labelledby="cs-outcome">
+        <h2 id="cs-outcome" class="cs-sec__title sd-rise">{tEn.outcome}</h2>
+        <div class="cs-prose cs-prose--statement prose">
           {isIt ? hasOutcomeEn && <slot name="outcome-en" /> : <slot name="outcome" />}
         </div>
       </section>
     </div>
 
-    <div class="case-study__body container container--reading">
-      <RelatedService locale={locale} lead={related.lead} services={related.services} class="case-study__related" />
+    <div class="cs-related container container--reading">
+      <RelatedService locale={locale} lead={related.lead} services={related.services} />
     </div>
 
-    <CtaBand locale={locale} />
+    <div class="cs-cta container container--breakout">
+      <CtaBand locale={locale} />
+    </div>
 
-    <div class="case-study__end container container--reading">
+    <div class="cs-end container container--breakout">
       <CaseNav slug={slug} locale={locale} />
-      <RiotDisclaimer scope="project" locale={locale} class="case-study__disclaimer" />
+      <RiotDisclaimer scope="project" locale={locale} class="cs-disclaimer" />
     </div>
   </article>
 </BaseLayout>
@@ -199,31 +219,112 @@ const hasOutcomeEn = Astro.slots.has('outcome-en');
 </script>
 
 <style>
-  .case-study { padding-top: var(--s-7); }
-  .case-study__crumbs ol { display: flex; gap: var(--s-2); list-style: none; padding: 0; font-family: var(--font-mono); font-size: var(--step--1); color: var(--muted); }
-  .case-study__crumbs a { display: inline-flex; align-items: center; min-height: 44px; }
-  .case-study__crumbs li { display: flex; align-items: center; gap: var(--s-2); }
-  .case-study__chips { display: flex; flex-wrap: wrap; gap: var(--s-2); list-style: none; padding: 0; margin-top: var(--s-4); }
-  .case-study__title { margin-top: var(--s-5); font-size: clamp(2rem, 1.3rem + 3vw, 3.5rem); text-wrap: pretty; }
-  .case-study__oneliner { margin-top: var(--s-5); }
-  .case-study :global(.case-study__spec) { margin-top: var(--s-6); padding-top: var(--s-3); border-top: 1.5px solid var(--horizon); }
-  .case-study__hero { margin-top: var(--s-7); }
-  .case-study__body { margin-top: var(--s-2); }
-  .case-study__section { margin-top: var(--s-8); }
-  .case-study__section > h2 { font-size: var(--step-3); margin-bottom: var(--s-4); }
-  .case-study__how > h2 { max-width: var(--reading); margin-inline: auto; }
-  .case-study__divider {
+  .cs { padding-top: clamp(var(--s-5), 4vw, var(--s-8)); }
+
+  /* ---- intro ---- */
+  .cs-intro__meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-4); }
+  .cs-crumbs ol {
     display: flex;
     align-items: center;
     gap: var(--s-2);
-    margin-top: var(--s-8);
-    padding-top: var(--s-3);
-    border-top: 1.5px solid var(--horizon);
+    min-height: 34px;
+    padding: 0 14px;
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-pill);
+    background: rgb(242 239 232 / .03);
+    font-size: var(--step--1);
+    font-weight: 500;
+    color: var(--muted);
+  }
+  .cs-crumbs li { display: flex; align-items: center; gap: var(--s-2); }
+  .cs-crumbs a { position: relative; color: var(--muted); text-decoration: none; transition: color var(--dur-1) ease; }
+  /* 44px hit area around the small pill link. */
+  .cs-crumbs a::before { content: ""; position: absolute; inset: -12px -10px; }
+  .cs-crumbs a:hover { color: var(--ink); }
+  .cs-crumbs__sep { color: var(--faint); }
+  .cs-crumbs [aria-current] { color: var(--ink); }
+  .cs-chips { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+
+  .cs-title {
+    margin-top: clamp(var(--s-5), 3.5vw, var(--s-7));
+    max-width: 19ch;
+    font-size: clamp(2.25rem, 1.3rem + 4.6vw, 5rem);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+  .cs-title__rest { color: var(--muted); }
+
+  .cs-intro__row { display: grid; gap: var(--s-6); margin-top: clamp(var(--s-6), 4vw, var(--s-8)); align-items: start; }
+  .cs-lead { color: var(--text); }
+  .cs-spec { padding: var(--s-5) var(--s-5) var(--s-4); }
+  .cs-spec__label { color: var(--muted); padding-bottom: var(--s-3); margin-bottom: var(--s-2); border-bottom: 1px solid var(--line); }
+  @media (min-width: 960px) {
+    .cs-intro__row { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--s-8); }
+    .cs-spec { padding: var(--s-6) var(--s-6) var(--s-5); }
+  }
+
+  /* ---- hero mockup on a stage ---- */
+  .cs-hero { margin-top: clamp(var(--s-8), 9vw, var(--s-10)); }
+  .cs-stage { position: relative; isolation: isolate; padding-bottom: var(--s-5); }
+  .cs-stage__glow {
+    left: 4%;
+    bottom: -16%;
+    width: 92%;
+    aspect-ratio: 2.2 / 1;
+    background: radial-gradient(closest-side, rgb(217 160 102 / .22), rgb(217 160 102 / .06) 58%, transparent);
+  }
+  .cs-stage__mockup { max-width: 960px; margin-inline: auto; }
+
+  /* ---- sections ---- */
+  .cs-sec { margin-top: clamp(var(--s-8), 9vw, var(--s-9)); }
+  .cs-hero + .cs-sec { margin-top: clamp(var(--s-8), 10vw, var(--s-10)); }
+  .cs-sec__title {
+    margin-bottom: var(--s-5);
+    font-size: var(--step-3);
+    font-weight: 660;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+  }
+  .cs-sec--wide > .cs-sec__title { margin-bottom: var(--s-6); }
+
+  .cs-prose { font-size: clamp(1.0625rem, 1rem + .25vw, 1.1875rem); line-height: 1.75; }
+  /* Outcome: a larger statement that lights up line by line as it scrolls through. */
+  .cs-prose--statement {
+    font-size: clamp(1.375rem, 1.1rem + 1.1vw, 1.875rem);
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: -0.018em;
     color: var(--ink);
   }
-  .case-study :global(.case-study__related) { margin-top: var(--s-8); margin-bottom: var(--s-8); }
-  .case-study__end { padding-block: var(--s-6) var(--s-8); }
-  .case-study :global(.case-study__disclaimer) { margin-top: var(--s-6); }
-  .case-study :global([data-step].is-active) { --step-accent: var(--buoy); }
-  .case-study :global(svg [data-step].is-active) { stroke: var(--buoy); font-weight: 600; }
+
+  .cs-divider {
+    display: flex;
+    align-items: center;
+    gap: var(--s-4);
+    margin-top: clamp(var(--s-8), 9vw, var(--s-9));
+  }
+  .cs-divider::before, .cs-divider::after { content: ""; flex: 1 1 var(--s-4); border-top: 1px solid var(--line-2); }
+  .cs-divider__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    max-width: calc(100% - 2 * var(--s-6));
+    padding: 7px 16px 7px 14px;
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-pill);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: var(--step--2);
+    font-weight: 560;
+    letter-spacing: 0.09em;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+
+  /* ---- closing ---- */
+  .cs-related { margin-top: clamp(var(--s-8), 9vw, var(--s-9)); }
+  .cs-cta { margin-top: clamp(var(--s-8), 10vw, var(--s-10)); }
+  .cs-end { margin-top: clamp(var(--s-7), 6vw, var(--s-8)); padding-bottom: clamp(var(--s-8), 8vw, var(--s-9)); }
+  .cs :global(.cs-disclaimer) { margin-top: var(--s-6); }
 </style>

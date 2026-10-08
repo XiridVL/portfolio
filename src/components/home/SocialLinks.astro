@@ -1,0 +1,39 @@
+---
+/**
+ * GitHub and LinkedIn as small glass pills with the ↗ in clay. Used in the
+ * About facts and the Contact direct column.
+ */
+import ExternalLink from '../ExternalLink.astro';
+import { site } from '../../data/site';
+import type { Locale } from '../../i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+---
+
+<span class="social">
+  <ExternalLink href={site.github} locale={locale} class="social__link">GitHub</ExternalLink>
+  <ExternalLink href={site.linkedin} locale={locale} class="social__link">LinkedIn</ExternalLink>
+</span>
+
+<style>
+  .social { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+  .social :global(.social__link) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 var(--s-4) 0 18px;
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-pill);
+    background: rgb(242 239 232 / .03);
+    color: var(--ink);
+    font-size: 0.9375rem;
+    font-weight: 560;
+    text-decoration: none;
+    transition: background-color var(--dur-1) ease, border-color var(--dur-1) ease;
+  }
+  .social :global(.social__link:hover) { background: rgb(242 239 232 / .08); border-color: rgb(242 239 232 / .28); }
+  .social :global(.ext-link__arrow) { color: var(--accent); }
+</style>

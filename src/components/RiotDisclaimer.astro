@@ -1,8 +1,9 @@
 ---
 /**
- * Riot Games trademark disclaimer (spec §16), verbatim.
+ * Riot Games trademark disclaimer, verbatim. Small print in --faint, so it
+ * belongs on --bg or --surface only.
  *   scope="site"    footer line ("This site and its projects…"); IT pages add the EN line
- *   scope="grid"    small print under the work grid (includes the mockups/IVPITER sentences)
+ *   scope="grid"    small print under the work list (includes the mockups/IVPITER sentences)
  *   scope="project" case-study pages ("This project…"); IT pages add the EN line
  */
 import { useStrings, type Locale } from '../i18n';
@@ -24,6 +25,11 @@ const addEnglish = locale !== 'en' && scope !== 'grid';
 </div>
 
 <style>
-  .riot-disclaimer { font-size: var(--step--1); color: var(--muted); max-width: var(--measure); }
+  .riot-disclaimer {
+    max-width: var(--measure);
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--faint);
+  }
   .riot-disclaimer p + p { margin-top: var(--s-1); }
 </style>

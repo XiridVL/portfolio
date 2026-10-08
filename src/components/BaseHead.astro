@@ -2,8 +2,8 @@
 /**
  * Everything in <head>: charset/viewport, title + description, canonical,
  * hreflang alternates (en, it, x-default → en), Open Graph / Twitter,
- * theme-color, icons, font preloads + @font-face, JSON-LD, and the inline
- * theme-init script (runs before paint, no flash).
+ * theme-color, icons, font preloads + @font-face and JSON-LD. The site is
+ * dark only, so there is no theme script.
  */
 import { fontFaceCss, fontPreloads } from '../styles/fonts';
 import { absoluteUrl, stripBase, withBase } from '../lib/url';
@@ -44,9 +44,6 @@ const otherLocale: Locale = locale === 'en' ? 'it' : 'en';
 const image = absoluteUrl(ogImage ?? ogImagePath(locale, routeKey ?? 'home'));
 const ldBlocks = jsonLd === undefined ? [] : Array.isArray(jsonLd) ? jsonLd : [jsonLd];
 
-// theme-init: apply a stored light/dark choice before first paint, and point both
-// theme-color metas (above it) at that theme's background. ThemeToggle does the same on change.
-const themeInit = `try{var t=localStorage.getItem('ac-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.content=t==='dark'?'#0A1316':'#F3F1EA'})}}catch(e){}`;
 ---
 
 <meta charset="utf-8" />
@@ -56,10 +53,8 @@ const themeInit = `try{var t=localStorage.getItem('ac-theme');if(t==='light'||t=
 {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
 {alternates.map((alt) => <link rel="alternate" hreflang={alt.hreflang} href={alt.href} />)}
 
-<meta name="theme-color" content="#F3F1EA" media="(prefers-color-scheme: light)" />
-<meta name="theme-color" content="#0A1316" media="(prefers-color-scheme: dark)" />
-<script is:inline set:html={themeInit} />
-<meta name="color-scheme" content="light dark" />
+<meta name="theme-color" content="#121212" />
+<meta name="color-scheme" content="dark" />
 
 <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
 <link rel="icon" href={withBase('/favicon-32.png')} type="image/png" sizes="32x32" />

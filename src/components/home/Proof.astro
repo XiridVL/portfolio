@@ -1,7 +1,7 @@
 ---
 /**
- * Soundings strip (#proof, spec §3.2 / §4.2): visually hidden H2, five proof
- * figures on the horizon rule, the footnote and the tech line.
+ * Proof strip (#proof): visually hidden H2, five big figures in one row split
+ * by hairlines, the footnote, then the tech line as a slow sideways marquee.
  */
 import Soundings from '../Soundings.astro';
 import ChipList from '../ChipList.astro';
@@ -19,11 +19,11 @@ const copy = homeCopy[locale].proof;
   <div class="container">
     <h2 id="proof-title" class="visually-hidden">{copy.title}</h2>
     <Soundings items={copy.items} footnote={copy.footnote} variant="strip" />
-    <ChipList items={copy.tech} class="proof__tech" />
+    <ChipList items={copy.tech} marquee class="proof__tech sd-rise" />
   </div>
 </section>
 
 <style>
-  .proof { padding-block: var(--s-5) var(--s-8); }
-  .proof :global(.proof__tech) { margin-top: var(--s-5); }
+  .proof { padding-block: clamp(72px, 9vw, 136px) clamp(48px, 7vw, 104px); }
+  .proof :global(.proof__tech) { margin-top: clamp(var(--s-7), 6vw, var(--s-9)); }
 </style>

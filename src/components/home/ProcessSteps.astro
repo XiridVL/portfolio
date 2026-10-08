@@ -1,5 +1,12 @@
 ---
-/** How I work (#process, spec §3.5 / §4.5): four numbered steps plus the ownership note. */
+/**
+ * How I work (#process): four numbered steps, then the ownership note as a
+ * full-width statement that lights up line by line as it scrolls through.
+ * Wide, tall screens get sticky storytelling: the header holds still on the
+ * left while the steps scroll past on the right, each one lit only while it
+ * crosses the middle of the viewport, with a clay line tracking progress.
+ * Phones get a plain list. Without scroll timelines every step is fully lit.
+ */
 import SectionHeader from '../SectionHeader.astro';
 import { homeCopy } from '../../i18n/home';
 import type { Locale } from '../../i18n';
@@ -11,75 +18,123 @@ const { locale } = Astro.props;
 const copy = homeCopy[locale].process;
 ---
 
-<section id="process" class="section section--deferred" aria-labelledby="process-title">
+<section id="process" class="process-section section section--deferred" aria-labelledby="process-title">
   <div class="container">
-    <SectionHeader id="process" number={copy.number} label={copy.label} title={copy.title} />
     <div class="process">
+      <div class="process__intro">
+        <SectionHeader id="process" number={copy.number} label={copy.label} title={copy.title} accent={copy.accent} />
+      </div>
       <ol class="process__steps" role="list">
         {
           copy.steps.map((step, i) => (
-            <li class="process__step reveal">
-              <span class="process__num mono" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
-              <p>
+            <li class="process__step sd-rise">
+              <span class="process__num accent-word" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+              <p class="process__text">
                 <strong class="process__title">{step.title}</strong> {step.text}
               </p>
             </li>
           ))
         }
       </ol>
-      <p class="process__note">
-        <span class="buoy-dot" aria-hidden="true"></span>
-        <span>{copy.note}</span>
-      </p>
     </div>
+    <p class="process__note">
+      <span class="process__dot dot" aria-hidden="true"></span>
+      <span class="sd-lit">{copy.note}</span>
+    </p>
   </div>
 </section>
 
 <style>
-  .process {
-    display: grid;
-    gap: var(--s-7);
-    grid-template-columns: minmax(0, 1fr);
-  }
-  @media (min-width: 960px) {
-    .process { grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); align-items: start; gap: var(--s-8); }
-  }
-  .process__steps {
-    display: grid;
-    gap: var(--s-5);
-    grid-template-columns: minmax(0, 1fr);
-    counter-reset: none;
-  }
-  @media (min-width: 640px) {
-    .process__steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  }
-  .process__step {
-    display: grid;
-    gap: var(--s-3);
-    align-content: start;
-    padding-top: var(--s-4);
-    border-top: 1px solid var(--line-strong);
-  }
+  .process-section { contain-intrinsic-size: auto 1900px; }
+
+  .process__steps { display: grid; gap: var(--s-7); }
   .process__num {
-    font-size: var(--step-3);
-    font-weight: 400;
+    display: block;
+    width: max-content;
+    margin-bottom: var(--s-3);
+    font-size: clamp(3.25rem, 2.2rem + 3.6vw, 6rem);
     line-height: 1;
-    color: var(--sea);
   }
-  .process__title { font-family: var(--font-display); font-weight: 650; color: var(--ink); }
-  .process__note {
-    display: flex;
-    align-items: baseline;
-    gap: var(--s-3);
-    font-family: var(--font-display);
+  .process__text { max-width: 34ch; font-size: var(--step-1); line-height: 1.55; color: var(--text); }
+  .process__title {
+    display: block;
+    margin-bottom: var(--s-2);
     font-size: var(--step-3);
-    font-weight: 650;
-    line-height: 1.2;
+    font-weight: 640;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+  }
+
+  .process__note {
+    max-width: 16ch;
+    margin: clamp(112px, 15vw, 224px) auto 0;
+    text-align: center;
+    font-size: var(--step-5);
+    font-weight: 680;
+    line-height: 1.04;
+    letter-spacing: -0.04em;
     color: var(--ink);
     text-wrap: balance;
   }
-  .process__note .buoy-dot { flex: none; transform: translateY(-0.15em); }
-  @media (min-width: 960px) {
-    .process__note { font-size: var(--step-4); position: sticky; top: calc(var(--header-h-compact, 56px) + var(--s-6)); }
+  .process__dot {
+    display: block;
+    margin: 0 auto var(--s-6);
+    box-shadow: 0 0 0 6px var(--accent-tint), 0 0 28px 6px var(--glow);
+  }
+
+  @media (min-width: 960px) and (min-height: 600px) {
+    .process-section { contain-intrinsic-size: auto 2600px; }
+    .process {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      column-gap: clamp(48px, 6vw, 112px);
+    }
+    .process__intro :global(.section-header) {
+      position: sticky;
+      top: calc(var(--header-h) + var(--s-7));
+      margin-bottom: 0;
+    }
+    .process__steps { position: relative; gap: 0; padding-inline-start: clamp(32px, 4vw, 64px); }
+    /* Hairline track, and the clay fill that grows along it as the steps scroll by. */
+    .process__steps::before, .process__steps::after {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 1px;
+      background: var(--line-2);
+    }
+    .process__steps::after {
+      background: linear-gradient(var(--accent-deep), var(--accent));
+      transform: scaleY(0);
+      transform-origin: 50% 0;
+    }
+    .process__step { padding-block: clamp(64px, 11vh, 120px); }
+    .process__step:first-child { padding-top: 0; }
+    .process__step:last-child { padding-bottom: 0; }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* Lit only around the middle of the viewport. No fill outside the range, so
+       steps that are off screen stay at full opacity. */
+    @keyframes process-lit {
+      0%, 18%, 82%, 100% { opacity: 0.25; }
+      42%, 58% { opacity: 1; }
+    }
+    @keyframes process-fill { to { transform: scaleY(1); } }
+    @supports (animation-timeline: view()) {
+      @media (min-width: 960px) and (min-height: 600px) {
+        .process__steps { view-timeline-name: --process-steps; }
+        .process__steps::after {
+          animation: process-fill linear both;
+          animation-timeline: --process-steps;
+          animation-range: cover 50vh cover calc(100% - 50vh);
+        }
+        .process__step {
+          animation: process-lit linear;
+          animation-timeline: view();
+          animation-range: cover 0% cover 100%;
+        }
+      }
+    }
   }
 </style>

@@ -1,11 +1,11 @@
 ---
 /**
- * Bilingual not-found page (spec §7.3): English first, an Italian block marked
- * lang="it". Visual: static contours, the horizon line and a single buoy dot.
+ * Bilingual not-found page: English first, an Italian block marked lang="it".
+ * Centred composition: a huge italic serif "404" (decorative) over a soft
+ * ember glow, the heading, copy and the way home.
  */
 import BaseLayout from '../components/BaseLayout.astro';
 import Button from '../components/Button.astro';
-import Contours from '../components/Contours.astro';
 import { notFoundMeta } from '../data/meta';
 import { localeHref } from '../i18n';
 ---
@@ -19,24 +19,22 @@ import { localeHref } from '../i18n';
   hideMobileCta
 >
   <section class="not-found section" aria-labelledby="not-found-title">
-    <div class="not-found__chart" aria-hidden="true">
-      <Contours width={1200} height={520} levels={9} seed="off-the-chart" />
-    </div>
+    <div class="ember ember--drift not-found__ember" aria-hidden="true"></div>
 
     <div class="container not-found__inner">
+      <p class="not-found__code ld-rise" aria-hidden="true"><em class="accent-word">404</em></p>
+
       <div class="not-found__block">
-        <h1 id="not-found-title">Off the chart.</h1>
-        <p class="lead">This page hasn't been sounded yet. The link may be old, or the address mistyped.</p>
-        <Button href={localeHref('home', 'en')} arrow="right">Back to the home page</Button>
+        <h1 id="not-found-title" class="not-found__title ld-rise" style="--i: 1">Off the chart.</h1>
+        <p class="lead ld-rise" style="--i: 2">This page hasn't been sounded yet. The link may be old, or the address mistyped.</p>
+        <div class="ld-rise" style="--i: 3">
+          <Button href={localeHref('home', 'en')} size="lg" arrow="right">Back to the home page</Button>
+        </div>
       </div>
 
-      <div class="not-found__horizon" aria-hidden="true">
-        <span class="buoy-dot"></span>
-      </div>
-
-      <div class="not-found__block not-found__block--it" lang="it">
-        <p class="lead">
-          <strong class="not-found__it-title">Fuori mappa.</strong> Questa pagina non esiste, oppure l'indirizzo è sbagliato.
+      <div class="not-found__block not-found__block--it ld-rise" style="--i: 4" lang="it">
+        <p>
+          <strong>Fuori mappa.</strong> Questa pagina non esiste, oppure l'indirizzo è sbagliato.
         </p>
         <Button href={localeHref('home', 'it')} variant="secondary" arrow="right" hreflang="it">Torna alla home</Button>
       </div>
@@ -46,44 +44,41 @@ import { localeHref } from '../i18n';
 
 <style>
   .not-found {
-    position: relative;
     isolation: isolate;
     overflow: hidden;
-    min-height: min(80vh, 760px);
+    overflow: clip;
+    min-height: calc(100svh - var(--header-h));
+    padding-block: var(--s-8);
     display: grid;
     align-content: center;
+    text-align: center;
   }
-  .not-found__chart {
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    opacity: 0.9;
-    mask-image: linear-gradient(to bottom, transparent, #000 25%, #000 70%, transparent);
+  .not-found__ember {
+    inset: 0 0 auto;
+    width: min(960px, 140vw);
+    margin: -8% auto 0;
+    opacity: .9;
   }
-  .not-found__inner {
-    display: grid;
-    gap: var(--s-7);
-    width: 100%;
+  .not-found__inner { display: grid; justify-items: center; }
+
+  .not-found__code {
+    font-size: clamp(6rem, 20vw, 14rem);
+    line-height: .8;
+    letter-spacing: -0.02em;
+    margin-bottom: var(--s-5);
   }
-  .not-found__block {
-    display: grid;
-    gap: var(--s-5);
-    justify-items: start;
-    max-width: var(--measure);
-  }
-  .not-found__block .lead { margin: 0; }
-  .not-found__horizon {
-    position: relative;
-    border-top: 1.5px solid var(--horizon);
-  }
-  /* A single buoy floating on the line, a little off-centre. */
-  .not-found__horizon .buoy-dot {
-    position: absolute;
-    left: 62%;
-    top: -4.75px; /* centre the 8px dot on the 1.5px line */
-  }
-  .not-found__it-title {
-    font-family: var(--font-display);
-    font-weight: 700;
+  .not-found__code .accent-word { display: inline-block; padding-inline: 0.08em; line-height: 1; }
+
+  .not-found__block { display: grid; gap: var(--s-5); justify-items: center; max-width: 38rem; }
+  .not-found__title { font-size: var(--step-4); letter-spacing: -0.035em; }
+  .not-found__block .lead { margin-inline: auto; }
+  .not-found__block > div { margin-top: var(--s-2); }
+
+  .not-found__block--it {
+    gap: var(--s-4);
+    margin-top: var(--s-7);
+    padding-top: var(--s-6);
+    border-top: 1px solid var(--line);
+    color: var(--muted);
   }
 </style>

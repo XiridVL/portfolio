@@ -1,5 +1,9 @@
 ---
-/** Previous / next case study (order: vStats → Desktop → Teams → IVPITER → vStats). */
+/**
+ * Previous / next case study as two large cards (order: vStats → Desktop →
+ * Teams → IVPITER → vStats). Small direction label, project name, an arrow
+ * that nudges on hover; stacked on phones.
+ */
 import { adjacentProjects, type ProjectSlug } from '../data/projects';
 import { localeHref, useStrings, type Locale } from '../i18n';
 
@@ -13,35 +17,56 @@ const t = useStrings(locale).caseStudy;
 const { prev, next } = adjacentProjects(slug);
 ---
 
-<nav class:list={['case-nav', className]} aria-label={t.navLabel}>
-  <a class="case-nav__link case-nav__link--prev" href={localeHref(prev.slug, locale)} rel="prev">
-    <span class="label muted"><span aria-hidden="true">← </span>{t.prev}</span>
+<nav class:list={['case-nav sd-rise', className]} aria-label={t.navLabel}>
+  <a class="case-nav__link case-nav__link--prev glow-card" href={localeHref(prev.slug, locale)} rel="prev" data-glow>
+    <span class="case-nav__dir label"><span class="case-nav__arrow" aria-hidden="true">←</span>{t.prev}</span>
     <span class="case-nav__name">{prev.name}</span>
   </a>
-  <a class="case-nav__link case-nav__link--next" href={localeHref(next.slug, locale)} rel="next">
-    <span class="label muted">{t.next}<span aria-hidden="true"> →</span></span>
+  <a class="case-nav__link case-nav__link--next glow-card" href={localeHref(next.slug, locale)} rel="next" data-glow>
+    <span class="case-nav__dir label">{t.next}<span class="case-nav__arrow" aria-hidden="true">→</span></span>
     <span class="case-nav__name">{next.name}</span>
   </a>
 </nav>
 
 <style>
-  .case-nav {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--s-4);
-    border-top: 1px solid var(--line);
-    padding-top: var(--s-5);
-  }
+  .case-nav { display: grid; gap: var(--s-4); }
+  @media (min-width: 640px) { .case-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-5); } }
+
   .case-nav__link {
     display: flex;
     flex-direction: column;
-    gap: var(--s-1);
-    min-height: 44px;
-    padding: var(--s-3) 0;
-    text-decoration: none;
+    justify-content: space-between;
+    gap: var(--s-6);
+    min-height: clamp(132px, 14vw, 176px);
+    padding: clamp(var(--s-5), 3vw, var(--s-6));
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow);
     color: var(--ink);
+    text-decoration: none;
+    transition:
+      transform var(--dur-2) var(--ease-out),
+      border-color var(--dur-2) var(--ease-out),
+      background-color var(--dur-2) var(--ease-out);
   }
-  .case-nav__link--next { text-align: right; align-items: flex-end; }
-  .case-nav__name { font-family: var(--font-display); font-weight: 650; font-size: var(--step-2); }
-  .case-nav__link:hover .case-nav__name { color: var(--sea); text-decoration: underline; text-underline-offset: 0.2em; }
+  .case-nav__link--next { align-items: flex-end; text-align: end; }
+  .case-nav__link:hover {
+    color: var(--ink);
+    border-color: var(--line-2);
+    background-color: color-mix(in srgb, var(--ink) 2%, var(--surface));
+    transform: translateY(-3px);
+  }
+
+  .case-nav__dir { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--muted); }
+  .case-nav__arrow { display: inline-block; font-size: 1.25em; letter-spacing: 0; transition: transform var(--dur-2) var(--ease-out); }
+  .case-nav__link--prev:hover .case-nav__arrow, .case-nav__link--prev:focus-visible .case-nav__arrow { transform: translateX(-5px); }
+  .case-nav__link--next:hover .case-nav__arrow, .case-nav__link--next:focus-visible .case-nav__arrow { transform: translateX(5px); }
+
+  .case-nav__name {
+    font-size: var(--step-3);
+    font-weight: 640;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+  }
 </style>

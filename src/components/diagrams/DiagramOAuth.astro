@@ -18,6 +18,8 @@ const steps = [
 ];
 
 const note = 'no email, no internal ID';
+/* Average advance of the diagram's sans face, in em, for sizing the strike line. */
+const charEm = 0.45;
 
 /* wide */
 const wx = { player: 120, site: 450, connect: 780 } as const;
@@ -26,7 +28,7 @@ const wHeads = [
   { x: wx.site, label: 'Community site' },
   { x: wx.connect, label: 'vStats Connect' },
 ];
-const wNoteHalf = (note.length * 9.6) / 2;
+const wNoteHalf = (note.length * 16 * charEm) / 2;
 
 /* tall */
 const tx = { player: 70, site: 180, connect: 290 } as const;
@@ -35,7 +37,7 @@ const tHeads: { x: number; label: string | string[] }[] = [
   { x: tx.site, label: ['Community', 'site'] },
   { x: tx.connect, label: ['vStats', 'Connect'] },
 ];
-const tNoteHalf = (note.length * 7.8) / 2;
+const tNoteHalf = (note.length * 13 * charEm) / 2;
 ---
 
 <DiagramFrame

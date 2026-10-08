@@ -1,5 +1,5 @@
 /**
- * Mockup micro-states (spec §12.4): each `[data-play]` frame gets `.is-playing`
+ * Mockup micro-states: each `[data-play]` frame gets `.is-playing`
  * once, the first time it enters the viewport. The waiting state is CSS-only
  * and gated on `(scripting: enabled)` and motion preference, so without this
  * script (or with reduced motion) the mockups simply render complete.

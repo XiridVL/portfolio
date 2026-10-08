@@ -1,10 +1,13 @@
 ---
 /**
- * Closing CTA band on case studies (spec §5.13):
+ * Closing CTA panel on case studies: a big centred panel with a clay gradient
+ * hairline and an ember glow inside, the line set large in two tones (question
+ * in warm grey, answer in ivory ending on an italic serif word), and the primary button:
  *   EN "Need something like this? Get a free quote." + [Get a free quote →]
  *   IT "Ti serve qualcosa di simile? Chiedi un preventivo gratuito." + [Preventivo gratuito →]
- * Override `text` / `button` / `href` for other pages.
+ * Override `text` / `button` / `href` for other pages. Place it inside a container.
  */
+import AccentText from './AccentText.astro';
 import Button from './Button.astro';
 import { sectionHref, useStrings, type Locale } from '../i18n';
 
@@ -17,34 +20,44 @@ interface Props {
 }
 const { locale, text, button, href, class: className } = Astro.props;
 const t = useStrings(locale).caseStudy;
+const line = text ?? t.ctaText;
+/* "Question? Answer." → the question on its own line in warm grey, the answer in
+   ivory with its last word (minus closing punctuation) in italic serif. */
+const [, question = '', answer = line] = line.match(/^(.+?[?!.])\s+(.+)$/) ?? [];
+const accent = answer.match(/([\p{L}\p{N}'’-]+)[.!?…]*$/u)?.[1];
 ---
 
-<section class:list={['cta-band', className]} aria-label={button ?? t.ctaButton}>
-  <div class="container cta-band__inner">
-    <p class="cta-band__text">{text ?? t.ctaText}</p>
-    <Button href={href ?? sectionHref('contact', locale, false)} size="lg" arrow="right">{button ?? t.ctaButton}</Button>
-  </div>
+<section class:list={['cta-band ring-accent sd-scale', className]} aria-label={button ?? t.ctaButton}>
+  <span class="cta-band__glow ember ember--drift" aria-hidden="true"></span>
+  <p class="cta-band__text">
+    {question && <span class="cta-band__q">{question}</span>}{question && ' '}<span class="cta-band__a"><AccentText text={answer} accent={accent} /></span>
+  </p>
+  <Button href={href ?? sectionHref('contact', locale, false)} size="lg" arrow="right">{button ?? t.ctaButton}</Button>
 </section>
 
 <style>
   .cta-band {
-    background: var(--surface-2);
-    border-top: 1.5px solid var(--horizon);
-    padding-block: var(--s-8);
-  }
-  .cta-band__inner {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--s-5);
+    gap: clamp(var(--s-6), 4vw, var(--s-7));
+    padding: clamp(var(--s-8), 9vw, var(--s-10)) clamp(var(--s-5), 6vw, var(--s-9));
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-lg);
+    text-align: center;
   }
+  .cta-band__glow { left: 50%; top: 18%; width: min(900px, 110%); translate: -50% 0; }
   .cta-band__text {
-    font-family: var(--font-display);
-    font-size: var(--step-3);
-    font-weight: 650;
-    line-height: 1.2;
-    max-width: 28ch;
+    max-width: 22ch;
+    color: var(--ink);
+    font-size: clamp(2.125rem, 1.25rem + 3.1vw, 3.75rem);
+    font-weight: 680;
+    line-height: 1.06;
+    letter-spacing: -0.035em;
     text-wrap: balance;
   }
+  .cta-band__q { display: block; color: var(--muted); }
 </style>

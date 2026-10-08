@@ -1,0 +1,18 @@
+---
+/**
+ * Headline text with one italic serif accent word (see src/lib/accent.ts).
+ * Renders inline content only; wrap it in the heading element.
+ *
+ *   <h2><AccentText text={copy.title} accent={copy.accent} /></h2>
+ */
+import { accentParts } from '../lib/accent';
+
+interface Props {
+  text: string;
+  accent?: string;
+}
+const { text, accent } = Astro.props;
+const parts = accentParts(text, accent);
+---
+
+{parts ? <Fragment>{parts.before}<em class="accent-word">{parts.word}</em>{parts.after}</Fragment> : text}

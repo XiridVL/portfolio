@@ -1,13 +1,13 @@
 ---
 /**
- * Contact (#contact, spec §3.8 / §4.8): brief builder on the left, direct
- * links (email + copy, GitHub, LinkedIn, location note) on the right.
+ * Contact (#contact): centred header, then the brief builder in a large
+ * ember-lit card beside the direct column (email + copy, GitHub, LinkedIn,
+ * location note). Side by side from 960px, stacked below.
  */
 import SectionHeader from '../SectionHeader.astro';
 import CopyEmail from '../CopyEmail.astro';
-import ExternalLink from '../ExternalLink.astro';
 import BriefBuilder from './BriefBuilder.astro';
-import { site } from '../../data/site';
+import SocialLinks from './SocialLinks.astro';
 import { homeCopy } from '../../i18n/home';
 import type { Locale } from '../../i18n';
 
@@ -18,47 +18,89 @@ const { locale } = Astro.props;
 const copy = homeCopy[locale].contact;
 ---
 
-<section id="contact" class="section" aria-labelledby="contact-title">
+<section id="contact" class="section contact-band" aria-labelledby="contact-title">
   <div class="container">
-    <SectionHeader id="contact" number={copy.number} label={copy.label} title={copy.title} intro={copy.intro} />
+    <SectionHeader
+      id="contact"
+      number={copy.number}
+      label={copy.label}
+      title={copy.title}
+      accent={copy.accent}
+      intro={copy.intro}
+      align="center"
+    />
     <div class="contact">
       <div class="contact__form">
-        <BriefBuilder locale={locale} />
+        <span class="ember ember--drift contact__ember" aria-hidden="true"></span>
+        <div class="contact__card ring-accent sd-scale">
+          <BriefBuilder locale={locale} />
+        </div>
       </div>
-      <div class="contact__direct">
+      <div class="contact__direct sd-rise" style="--i: 1">
         <CopyEmail locale={locale} />
-        <p class="contact__links">
-          <ExternalLink href={site.github} locale={locale} class="contact__link">GitHub</ExternalLink>
-          <span aria-hidden="true">·</span>
-          <ExternalLink href={site.linkedin} locale={locale} class="contact__link">LinkedIn</ExternalLink>
+        <SocialLinks locale={locale} />
+        <p class="contact__note">
+          <svg class="contact__pin" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
+            <path d="M8 14.5s-5-4.6-5-8.5a5 5 0 0 1 10 0c0 3.9-5 8.5-5 8.5Z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round" />
+            <circle cx="8" cy="6" r="1.75" fill="currentColor" />
+          </svg>
+          <span>{copy.note}</span>
         </p>
-        <p class="contact__note">{copy.note}</p>
       </div>
     </div>
   </div>
 </section>
 
 <style>
+  /* Keep the ember glow from widening the page; clip does not break sticky. */
+  .contact-band { overflow-x: clip; }
   .contact {
     display: grid;
-    gap: var(--s-8);
+    gap: var(--s-7);
     grid-template-columns: minmax(0, 1fr);
   }
   @media (min-width: 960px) {
     .contact { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--s-8); align-items: start; }
   }
-  .contact__form { min-width: 0; }
+
+  .contact__form { position: relative; isolation: isolate; min-width: 0; }
+  .contact__ember { width: 124%; inset: -16% auto auto -12%; }
+  .contact__card {
+    padding: clamp(20px, 5vw, 48px);
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-lg);
+  }
+
   .contact__direct {
     display: grid;
-    gap: var(--s-4);
+    gap: var(--s-5);
     min-width: 0;
-    padding-top: var(--s-5);
-    border-top: 1.5px solid var(--horizon);
+    padding-top: var(--s-6);
+    border-top: 1px solid var(--line-2);
   }
   @media (min-width: 960px) {
-    .contact__direct { position: sticky; top: calc(var(--header-h-compact, 56px) + var(--s-6)); }
+    .contact__direct { padding-top: var(--s-7); }
   }
-  .contact__links { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--s-3); color: var(--muted); }
-  .contact__links :global(.contact__link) { display: inline-flex; align-items: center; min-height: 44px; }
-  .contact__note { color: var(--muted); font-size: var(--step--1); }
+  @media (min-width: 960px) and (min-height: 700px) {
+    .contact__direct { position: sticky; top: calc(var(--header-h) + var(--s-7)); }
+  }
+
+  .contact__note {
+    display: flex;
+    gap: var(--s-3);
+    align-items: flex-start;
+    padding-top: var(--s-5);
+    border-top: 1px solid var(--line);
+    font-size: var(--step--1);
+    color: var(--muted);
+  }
+  .contact__note span { max-width: 40ch; }
+  .contact__pin { margin-top: 0.2em; color: var(--accent); }
+
+  /* The card settles quickly so the fields are fully legible early. */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .contact__card { animation-range: entry 0% cover 40vh; }
+    }
+  }
 </style>

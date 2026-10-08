@@ -1,7 +1,10 @@
 ---
 /**
- * FAQ (#faq, spec §3.7 / §4.7): native <details>, all closed. The FAQPage
- * JSON-LD is built by the page from the same items (homeCopy[locale].faq.items).
+ * FAQ (#faq): native <details> accordion, all closed. On wide screens the
+ * header stays pinned on the left while the questions scroll on the right.
+ * Open and close glide where ::details-content can be animated; no script.
+ * The FAQPage JSON-LD is built by the page from the same items
+ * (homeCopy[locale].faq.items).
  */
 import SectionHeader from '../SectionHeader.astro';
 import { homeCopy } from '../../i18n/home';
@@ -15,14 +18,15 @@ const copy = homeCopy[locale].faq;
 ---
 
 <section id="faq" class="section section--deferred" aria-labelledby="faq-title">
-  <div class="container">
-    <SectionHeader id="faq" number={copy.number} label={copy.label} title={copy.title} />
-    <div class="faq">
+  <div class="container faq">
+    <SectionHeader id="faq" number={copy.number} label={copy.label} title={copy.title} accent={copy.accent} class="faq__header" />
+    <div class="faq__list">
       {
-        copy.items.map((item) => (
-          <details class="faq__item">
+        copy.items.map((item, i) => (
+          <details class="faq__item sd-rise">
             <summary class="faq__question">
-              <span>{item.question}</span>
+              <span class="faq__index" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+              <span class="faq__text">{item.question}</span>
               <span class="faq__icon" aria-hidden="true" />
             </summary>
             <p class="faq__answer">{item.answer}</p>
@@ -34,47 +38,116 @@ const copy = homeCopy[locale].faq;
 </section>
 
 <style>
-  .faq { max-width: 860px; border-top: 1.5px solid var(--horizon); }
-  .faq__item { border-bottom: 1px solid var(--line-strong); }
+  @media (min-width: 960px) {
+    .faq { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--s-8); align-items: start; }
+    .faq :global(.faq__header) { margin-bottom: 0; }
+  }
+  @media (min-width: 960px) and (min-height: 640px) {
+    .faq :global(.faq__header) { position: sticky; top: calc(var(--header-h) + var(--s-7)); }
+  }
+
+  .faq__list { border-top: 1px solid var(--line-2); }
+  .faq__item { border-bottom: 1px solid var(--line-2); }
+
   .faq__question {
-    display: flex;
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr) 32px;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--s-4);
-    min-height: 44px;
-    padding-block: var(--s-4);
-    font-family: var(--font-display);
-    font-size: var(--step-2);
-    font-weight: 650;
-    line-height: 1.25;
+    gap: var(--s-3);
+    min-height: 56px;
+    padding-block: var(--s-5);
     color: var(--ink);
     cursor: pointer;
     list-style: none;
+    border-radius: var(--r-sm);
   }
   .faq__question::-webkit-details-marker { display: none; }
-  .faq__question:hover { color: var(--sea); }
+  .faq__question::marker { content: ""; }
+  .faq__index {
+    align-self: start;
+    padding-top: 0.45em;
+    font-size: var(--step--2);
+    font-weight: 560;
+    letter-spacing: 0.06em;
+    font-variant-numeric: tabular-nums;
+    color: var(--faint);
+    transition: color var(--dur-2) ease;
+  }
+  .faq__text {
+    font-size: clamp(1.125rem, 1rem + 0.35vw, 1.3125rem);
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: -0.014em;
+    text-wrap: balance;
+  }
+
+  /* 32px round button look: a plus that turns into a cross when open. */
   .faq__icon {
     position: relative;
-    flex: none;
-    width: 16px;
-    height: 16px;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--line-2);
+    border-radius: 50%;
+    background: rgb(242 239 232 / .03);
+    transition:
+      background-color var(--dur-2) ease,
+      border-color var(--dur-2) ease,
+      color var(--dur-2) ease,
+      transform var(--dur-3) var(--ease-out);
   }
   .faq__icon::before,
   .faq__icon::after {
     content: "";
     position: absolute;
-    top: 50%;
-    left: 0;
-    width: 100%;
-    border-top: 1.5px solid currentColor;
-    transform: translateY(-50%);
-    transition: transform var(--dur-2) var(--ease-tide);
+    inset: 50% auto auto 50%;
+    width: 12px;
+    height: 1.5px;
+    margin: -0.75px 0 0 -6px;
+    border-radius: 1px;
+    background: currentColor;
   }
-  .faq__icon::after { transform: translateY(-50%) rotate(90deg); }
-  .faq__item[open] .faq__icon::after { transform: translateY(-50%) rotate(0deg); }
+  .faq__icon::after { transform: rotate(90deg); }
+  .faq__question:hover .faq__icon { background: var(--surface-3); border-color: var(--line-strong); }
+  .faq__question:hover .faq__index,
+  .faq__item[open] .faq__index { color: var(--accent); }
+  .faq__item[open] .faq__icon {
+    transform: rotate(135deg);
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--on-accent);
+  }
+  .faq__question:focus-visible { outline-offset: 2px; }
+  @media (forced-colors: active) {
+    .faq__icon::before, .faq__icon::after { forced-color-adjust: none; }
+  }
+
   .faq__answer {
     max-width: var(--measure);
-    padding-bottom: var(--s-5);
-    color: var(--muted);
+    padding: 0 calc(32px + var(--s-3)) var(--s-6) calc(2.25rem + var(--s-3));
+    color: var(--text);
+  }
+  @media (max-width: 559px) {
+    .faq__question { grid-template-columns: 1.75rem minmax(0, 1fr) 32px; }
+    .faq__answer { padding-inline: calc(1.75rem + var(--s-3)) 0; }
+  }
+
+  /* Smooth open/close: animate the details content box to and from auto. */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports selector(::details-content) {
+      .faq__item::details-content {
+        block-size: 0;
+        overflow-y: clip;
+        transition:
+          block-size var(--dur-3) var(--ease-out),
+          content-visibility var(--dur-3) allow-discrete;
+      }
+      .faq__item[open]::details-content { block-size: auto; }
+      .faq__answer {
+        opacity: 0;
+        transform: translateY(-8px);
+        transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-out);
+      }
+      .faq__item[open] .faq__answer { opacity: 1; transform: none; }
+    }
   }
 </style>

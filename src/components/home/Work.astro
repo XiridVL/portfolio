@@ -1,7 +1,12 @@
 ---
 /**
- * Selected work (#work, spec §3.3 / §4.3): four project cards in a 2×2 grid
- * from 960px, then the Riot small print.
+ * Selected work (#work): four project cards, then the Riot small print.
+ * Phones, tablets and short screens: a single column, each card rising in
+ * (.sd-scale). Wide and tall screens with scroll-driven animation support:
+ * stacking cards. Each card sticks under the header a little lower than the
+ * one before; while the next card slides over it, it shrinks and dims
+ * against the list's view timeline. Reduced motion or no support: the plain
+ * single column.
  */
 import SectionHeader from '../SectionHeader.astro';
 import WorkCard from '../WorkCard.astro';
@@ -20,11 +25,18 @@ const cards = projectCards(locale);
 
 <section id="work" class="section" aria-labelledby="work-title">
   <div class="container">
-    <SectionHeader id="work" number={copy.number} label={copy.label} title={copy.title} intro={copy.intro} />
-    <ul class="work-grid" role="list">
+    <SectionHeader
+      id="work"
+      number={copy.number}
+      label={copy.label}
+      title={copy.title}
+      accent={copy.accent}
+      intro={copy.intro}
+    />
+    <ul class="work-stack" role="list" style={`--count: ${cards.length}`}>
       {
-        cards.map((card) => (
-          <li class="work-grid__item reveal">
+        cards.map((card, i) => (
+          <li class="work-stack__item sd-scale" style={`--index: ${i}`}>
             <WorkCard {...card} locale={locale} />
           </li>
         ))
@@ -35,15 +47,75 @@ const cards = projectCards(locale);
 </section>
 
 <style>
-  .work-grid {
+  .work-stack {
     display: grid;
-    gap: var(--s-5);
+    gap: var(--s-6);
     grid-template-columns: minmax(0, 1fr);
   }
+  .work-stack__item { display: grid; }
+  .work-stack + :global(.work-small-print) { margin-top: var(--s-8); }
+
+  /* Wide: equal-height horizontal cards that fit the viewport. */
   @media (min-width: 960px) {
-    .work-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-6); }
+    .work-stack { gap: var(--s-7); grid-auto-rows: 1fr; }
+    .work-stack__item { min-height: min(560px, 70vh); }
   }
-  .work-grid__item { display: flex; }
-  .work-grid__item > :global(*) { flex: 1; }
-  .work-grid + :global(.work-small-print) { margin-top: var(--s-6); }
+
+  /* Stacking cards (wide and tall screens only). Geometry, per card i of n:
+     it sticks at --top; the next card's top lies (row + gap) further down the
+     list. Over the list's exit-crossing range (its own height, 100%), card i
+     recedes from the moment card i+1 reaches its bottom edge until card i+1
+     sticks. Row height = (100% + gap) / n - gap. */
+  /* em queries (960 × 720px at the default font size) so larger user font
+     sizes, which make the cards taller, need a taller screen too. */
+  @media (min-width: 60em) and (min-height: 45em) and (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .work-stack {
+        --gap: clamp(64px, 11vh, 120px);
+        gap: var(--gap);
+        view-timeline-name: --work-stack;
+      }
+      .work-stack__item {
+        --top: calc(var(--header-h-compact) + 24px + var(--index) * 14px);
+        position: sticky;
+        top: var(--top);
+        transform-origin: 50% 0;
+      }
+      .work-stack__item > :global(.work-card) {
+        box-shadow: 0 -16px 40px -24px rgb(0 0 0 / .75), var(--shadow);
+      }
+      .work-stack__item,
+      .work-stack__item::after {
+        animation: work-recede linear both;
+        animation-timeline: --work-stack;
+        animation-range:
+          exit-crossing calc(var(--index) / var(--count) * (100% + var(--gap)) + var(--gap) - var(--top))
+          exit-crossing calc((var(--index) + 1) / var(--count) * (100% + var(--gap)) - var(--top) - 14px);
+      }
+      /* Dimming veil: page colour over the card, never see-through to the card behind. */
+      .work-stack__item::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        border-radius: var(--r-xl);
+        background: var(--bg);
+        opacity: 0;
+        pointer-events: none;
+        animation-name: work-dim;
+      }
+      .work-stack__item:last-child,
+      .work-stack__item:last-child::after { animation: none; }
+      /* Keyboard focus brings a covered card to the front, full size. */
+      .work-stack__item:has(:focus-visible) { z-index: 3; animation: none; }
+      .work-stack__item:has(:focus-visible)::after { animation: none; }
+
+      @keyframes work-recede {
+        to { scale: calc(0.98 - (var(--count) - var(--index) - 1) * 0.02); }
+      }
+      @keyframes work-dim {
+        to { opacity: calc(0.2 + (var(--count) - var(--index) - 1) * 0.1); }
+      }
+    }
+  }
 </style>
