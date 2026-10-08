@@ -4,17 +4,18 @@
 # choose New > Blueprint and select the repository. Render creates the service
 # below and deploys the default branch.
 #
-# Deploys wait for the GitHub Actions checks (.github/workflows/ci.yml: type
-# check, compliance, links, Lighthouse budgets) to pass on the commit. The build
-# itself also runs the link and compliance checks on the exact output it ships,
-# so a failing check stops the deploy.
+# Every push to main deploys. The build runs the type check, then the link and
+# compliance checks on the exact output it ships, so a failing check stops the
+# deploy and the previous version stays online. Lighthouse budgets run in
+# GitHub Actions (.github/workflows/ci.yml); to make deploys wait for those
+# too, set autoDeployTrigger to checksPass.
 services:
   - type: web
     runtime: static
     name: andrea-capelli-portfolio
-    buildCommand: npm ci && npm run build && npm run check:links && npm run check:compliance
+    buildCommand: npm ci && npm run check && npm run build && npm run check:links && npm run check:compliance
     staticPublishPath: ./dist
-    autoDeployTrigger: checksPass
+    autoDeployTrigger: commit
     envVars:
       # Canonical origin for canonical/hreflang/Open Graph/JSON-LD/robots/sitemap.
       # Leave unset to use the service's onrender.com URL (RENDER_EXTERNAL_URL);

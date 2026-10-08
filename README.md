@@ -30,8 +30,8 @@ One-time setup:
 
 After that, every push to `main` deploys on its own:
 
-1. **CI** (`.github/workflows/ci.yml`) runs on every push and pull request: type check, build, `check:compliance`, `check:links`, and Lighthouse budgets on `/`, `/it/` and `/work/vstats/` (scores of 95+ in all four categories, plus byte budgets for HTML, CSS, JS, fonts and images).
-2. **Render** waits for those checks to pass on the commit (`autoDeployTrigger: checksPass`), then builds with `npm ci && npm run build && npm run check:links && npm run check:compliance`. A failing check stops the deploy, and the previous version stays online.
+1. **Render** builds with `npm ci && npm run check && npm run build && npm run check:links && npm run check:compliance`. A failing type check, link check or compliance check stops the deploy, and the previous version stays online.
+2. **CI** (`.github/workflows/ci.yml`) runs on every push and pull request on GitHub Actions: the same checks plus Lighthouse budgets on `/`, `/it/` and `/work/vstats/` (scores of 95+ in all four categories, plus byte budgets for HTML, CSS, JS, fonts and images). It does not block the deploy by default; to make Render wait for it, set `autoDeployTrigger: checksPass` in `render.yaml`.
 3. The built `dist/` is published to Render's CDN. Hashed assets under `/_astro/` are served with a one-year immutable cache; every page gets basic security headers. A missing path is answered with `404.html`.
 
 Node.js comes from `.node-version` (24), for both Render and CI.
