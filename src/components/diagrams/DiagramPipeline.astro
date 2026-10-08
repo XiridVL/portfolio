@@ -1,0 +1,111 @@
+---
+/**
+ * 11.3 Pipeline (vStats Teams): detect → keep ID → fetch → disk queue →
+ * upload (with a retry loop) → grade → board / VOD / performance.
+ */
+import DiagramFrame from './DiagramFrame.astro';
+import Arrow from './Arrow.astro';
+import Box from './Box.astro';
+import Badge from './Badge.astro';
+import Label from './Label.astro';
+import { arrowHead } from './geometry';
+
+const steps = [
+  'Detect a qualifying practice match.',
+  'Keep only the match ID during play.',
+  'Fetch the match data after the game.',
+  'Queue it on disk.',
+  'Upload it, retrying until it succeeds.',
+  'The server computes stats and grades decisions.',
+  'Results appear in the performance, strategy and VOD screens.',
+];
+
+const stages: (string | string[])[] = ['detect', 'keep ID', 'fetch', ['disk', 'queue'], 'upload', 'grade'];
+const outputs = ['board', 'VOD', 'performance'];
+
+/* wide: one row */
+const pitch = 124;
+const boxW = 100;
+const rowY = 62;
+const rowH = 48;
+const midY = rowY + rowH / 2;
+const outX = 760;
+const outW = 136;
+const outCy = [48, 86, 124];
+const retryWide = { d: 'M566,110 C566,152 526,152 526,119', head: arrowHead([526, 110], [0, -1]) };
+
+/* tall: one column */
+const tallPitch = 56;
+const tallW = 200;
+const tallH = 36;
+const tallX = 40;
+const tallCenterX = tallX + tallW / 2;
+const tallOutY = 346;
+const tallOuts = [
+  { x: 40, w: 80 },
+  { x: 128, w: 80 },
+  { x: 216, w: 120 },
+];
+const uploadTop = 4 * tallPitch;
+const retryTall = {
+  d: `M240,${uploadTop + 10} C278,${uploadTop + 10} 278,${uploadTop + 26} 249,${uploadTop + 26}`,
+  head: arrowHead([240, uploadTop + 26], [-1, 0]),
+};
+---
+
+<DiagramFrame
+  id="diagram-pipeline"
+  title="vStats Teams capture pipeline"
+  desc="Seven stages: detect a practice match, keep its ID, fetch the data, queue it on disk, upload it with retries, grade decisions on the server, then show results on the strategy board, VOD and performance screens. The list below describes each step."
+  steps={steps}
+  wideViewBox="-4 -6 904 186"
+  tallViewBox="-2 -2 344 388"
+>
+  <Fragment slot="wide">
+    {
+      stages.map((label, i) => (
+        <g class="d-step" data-step={i + 1}>
+          {i > 0 && <Arrow from={[(i - 1) * pitch + boxW, midY]} to={[i * pitch, midY]} />}
+          <Box x={i * pitch} y={rowY} w={boxW} h={rowH} label={label} />
+          <Badge x={i * pitch + boxW / 2} y={40} n={i + 1} />
+          {i === 4 && (
+            <>
+              <path class="d-line" d={retryWide.d} />
+              <polygon class="d-head" points={retryWide.head} />
+              <Label x={546} y={164} text="retry" />
+            </>
+          )}
+        </g>
+      ))
+    }
+    <g class="d-step" data-step="7">
+      {outCy.map((cy) => <Arrow from={[5 * pitch + boxW, midY]} to={[outX, cy]} bend="h" />)}
+      {outputs.map((label, i) => <Box x={outX} y={outCy[i]! - 15} w={outW} h={30} label={label} />)}
+      <Badge x={outX + outW / 2} y={12} n={7} />
+    </g>
+  </Fragment>
+
+  <Fragment slot="tall">
+    {
+      stages.map((label, i) => (
+        <g class="d-step" data-step={i + 1}>
+          {i > 0 && <Arrow from={[tallCenterX, (i - 1) * tallPitch + tallH]} to={[tallCenterX, i * tallPitch]} />}
+          <Box x={tallX} y={i * tallPitch} w={tallW} h={tallH} label={Array.isArray(label) ? label.join(' ') : label} />
+          <Badge x={16} y={i * tallPitch + tallH / 2} n={i + 1} r={11} />
+          {i === 4 && (
+            <>
+              <path class="d-line" d={retryTall.d} />
+              <polygon class="d-head" points={retryTall.head} />
+              <Label x={284} y={uploadTop + 18} text="retry" anchor="start" />
+            </>
+          )}
+        </g>
+      ))
+    }
+    <g class="d-step" data-step="7">
+      {tallOuts.map((o) => <Arrow from={[tallCenterX, 5 * tallPitch + tallH]} to={[o.x + o.w / 2, tallOutY]} bend="v" />)}
+      {tallOuts.map((o, i) => <Box x={o.x} y={tallOutY} w={o.w} h={tallH} label={outputs[i]!} />)}
+      <Badge x={16} y={tallOutY + tallH / 2} n={7} r={11} />
+    </g>
+  </Fragment>
+</DiagramFrame>

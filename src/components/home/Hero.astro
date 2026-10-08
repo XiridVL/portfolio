@@ -1,0 +1,158 @@
+---
+/**
+ * Home hero (#top, spec §3.1 / §4.1): eyebrow, two-line H1 on the horizon,
+ * subcopy, three calls to action, microline and the stream panel.
+ * Load motion (spec §12.1) is CSS only and collapses under reduced motion.
+ */
+import Button from '../Button.astro';
+import Contours from '../Contours.astro';
+import StreamPanel from '../mockups/StreamPanel.astro';
+import { homeCopy } from '../../i18n/home';
+import type { Locale } from '../../i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const copy = homeCopy[locale].hero;
+---
+
+<section id="top" class="hero" aria-labelledby="top-title">
+  <Contours class="hero__contours" width={1200} height={760} levels={7} points={16} cx={0.72} cy={0.42} />
+  <div class="container hero__grid">
+    <div class="hero__head">
+      <p class="hero__eyebrow eyebrow">{copy.eyebrow}</p>
+      <h1 id="top-title" class="hero__title">
+        {
+          copy.titleLines.map((line, i) => (
+            <>
+              {i > 0 && ' '}
+              <span class="hero__line" style={`--i: ${i}`}>{line}</span>
+            </>
+          ))
+        }
+      </h1>
+      <div class="hero__horizon" aria-hidden="true"></div>
+    </div>
+    <div class="hero__copy">
+      <p class="hero__sub lead">{copy.sub}</p>
+      <div class="hero__actions">
+        <Button href="#contact" arrow="right" size="lg">{copy.primary}</Button>
+        <Button href="#services" variant="secondary" arrow="down" size="lg">{copy.secondary}</Button>
+        <Button href="#work" variant="text" arrow="down">{copy.tertiary}</Button>
+      </div>
+      <p class="hero__micro mono">{copy.microline}</p>
+    </div>
+    <figure class="hero__visual">
+      <StreamPanel locale={locale} />
+      <figcaption class="hero__caption mono">{copy.caption}</figcaption>
+    </figure>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    isolation: isolate;
+    overflow-x: clip;
+    padding-block: var(--s-8);
+    scroll-margin-top: 80px;
+  }
+  .hero :global(.hero__contours) {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+  }
+
+  /* H1 spans the full width (two lines from 640px); copy and panel sit below the horizon. */
+  .hero__grid {
+    display: grid;
+    gap: 0 var(--s-7);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "head" "copy" "visual";
+  }
+  @media (min-width: 960px) {
+    .hero__grid {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      grid-template-areas: "head head" "copy visual";
+      align-items: start;
+    }
+  }
+  .hero__head { grid-area: head; min-width: 0; }
+  .hero__copy { grid-area: copy; min-width: 0; }
+  .hero__title { margin-top: var(--s-4); }
+  .hero__line { display: inline; }
+  @media (min-width: 640px) {
+    .hero__line { display: block; }
+  }
+
+  /* Full-bleed horizon under the H1, drawn from the left edge on load. */
+  /* The rule is height 0, so its own margins would collapse into one: the space
+     below it comes from the head's padding instead. */
+  .hero__head { padding-bottom: var(--s-6); }
+  .hero__horizon {
+    position: relative;
+    height: 0;
+    margin-top: var(--s-6);
+  }
+  .hero__horizon::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: calc(50% - 50vw);
+    width: 100vw;
+    border-top: 1.5px solid var(--horizon);
+    transform-origin: left center;
+  }
+
+  .hero__sub { color: var(--ink); }
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-3) var(--s-4);
+    margin-top: var(--s-6);
+  }
+  .hero__micro {
+    margin-top: var(--s-5);
+    font-size: var(--step--1);
+    color: var(--muted);
+  }
+
+  /* Single column: keep the panel at its desktop density instead of stretching it. */
+  .hero__visual { grid-area: visual; position: relative; z-index: 1; min-width: 0; max-width: 520px; margin-top: var(--s-7); }
+  @media (min-width: 960px) {
+    .hero__visual { margin-top: 0; max-width: none; }
+  }
+  .hero__caption {
+    margin-top: var(--s-3);
+    font-size: var(--step--2);
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
+  /* Load motion (spec §12.1): horizon draws, H1 lines rise, microline last. */
+  @media (prefers-reduced-motion: no-preference) {
+    .hero__horizon::before { animation: hero-draw var(--dur-3) var(--ease-tide) both; }
+    .hero__line {
+      animation: hero-rise var(--dur-3) var(--ease-tide) both;
+      animation-delay: calc(var(--i) * 80ms);
+    }
+    @media (max-width: 639px) {
+      .hero__line { display: inline-block; }
+    }
+    .hero__micro { animation: hero-fade var(--dur-2) ease 600ms both; }
+  }
+  @keyframes hero-draw {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+  @keyframes hero-rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes hero-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+</style>

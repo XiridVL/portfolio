@@ -1,0 +1,322 @@
+---
+/**
+ * Mailto brief builder (spec §3.8 / §4.8). Without JS it is a plain
+ * `mailto:` form; with JS it validates, composes the subject and body, and
+ * opens the visitor's email app. Nothing is sent or stored by the site, and
+ * the form never clears.
+ *
+ * The script also handles the service handoff: `?service=<id>` preselects a
+ * radio, an arrival on #contact focuses the message, and "Ask about this"
+ * links on the same page are handled in place instead of reloading.
+ */
+import Button from '../Button.astro';
+import { site } from '../../data/site';
+import { customChoice, services } from '../../data/services';
+import { homeCopy } from '../../i18n/home';
+import type { Locale } from '../../i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const { form, email } = homeCopy[locale].contact;
+const choices = [
+  ...services.map((s) => ({ id: s.id, label: s.content[locale].formLabel })),
+  { id: customChoice.id, label: customChoice.formLabel[locale] },
+];
+
+/** Strings the script needs, serialised onto the form. */
+const scriptCopy = {
+  email: site.email,
+  subject: email.subject,
+  greeting: email.greeting,
+  service: email.service,
+  budget: email.budget,
+  start: email.start,
+  name: email.name,
+  notSpecified: email.notSpecified,
+  longBrief: form.longBrief,
+  opened: form.opened,
+};
+---
+
+<form
+  class="brief"
+  action={`mailto:${site.email}`}
+  method="post"
+  enctype="text/plain"
+  data-brief
+  data-copy={JSON.stringify(scriptCopy)}
+>
+  <fieldset class="brief__fieldset" id="brief-service" role="radiogroup" aria-describedby="brief-service-hint">
+    <legend class="brief__legend">{form.legend}</legend>
+    <p class="brief__hint" id="brief-service-hint">{form.requiredHint}</p>
+    <div class="brief__choices">
+      {
+        choices.map((choice) => (
+          <label class="brief__choice">
+            <input type="radio" name="service" value={choice.id} data-label={choice.label} required />
+            <span>{choice.label}</span>
+          </label>
+        ))
+      }
+    </div>
+    <p class="brief__error" id="brief-service-error" data-error-for="service" hidden>{form.errors.service}</p>
+  </fieldset>
+
+  <div class="brief__row">
+    <div class="brief__field">
+      <label for="brief-budget">{form.budgetLabel}</label>
+      <select id="brief-budget" name="budget">
+        <option value="">—</option>
+        {form.budgetOptions.map((o) => <option value={o}>{o}</option>)}
+      </select>
+    </div>
+    <div class="brief__field">
+      <label for="brief-start">{form.startLabel}</label>
+      <select id="brief-start" name="start">
+        <option value="">—</option>
+        {form.startOptions.map((o) => <option value={o}>{o}</option>)}
+      </select>
+    </div>
+  </div>
+
+  <div class="brief__field">
+    <label for="brief-name">{form.nameLabel}</label>
+    <input id="brief-name" name="name" type="text" autocomplete="name" />
+  </div>
+
+  <div class="brief__field">
+    <label for="brief-message">{form.messageLabel}</label>
+    <p class="brief__hint" id="brief-message-hint">{form.requiredHint}</p>
+    <textarea
+      id="brief-message"
+      name="message"
+      rows="6"
+      required
+      placeholder={form.messagePlaceholder}
+      aria-describedby="brief-message-hint"></textarea>
+    <p class="brief__error" id="brief-message-error" data-error-for="message" hidden>{form.errors.message}</p>
+  </div>
+
+  <p class="brief__helper" id="brief-helper">{form.helper}</p>
+  <p class="brief__long" data-brief-long hidden></p>
+  <Button type="submit" arrow="right" size="lg" aria-describedby="brief-helper">{form.submit}</Button>
+  <p class="brief__status" aria-live="polite" data-brief-status></p>
+</form>
+
+<script>
+  interface BriefCopy {
+    email: string;
+    subject: string;
+    greeting: string;
+    service: string;
+    budget: string;
+    start: string;
+    name: string;
+    notSpecified: string;
+    longBrief: string;
+    opened: string;
+  }
+
+  const MAX_ENCODED_BODY = 1800;
+
+  function setup(form: HTMLFormElement) {
+    const copy = JSON.parse(form.dataset.copy ?? '{}') as BriefCopy;
+    const fieldset = form.querySelector<HTMLFieldSetElement>('#brief-service');
+    const radios = Array.from(form.querySelectorAll<HTMLInputElement>('input[name="service"]'));
+    const message = form.querySelector<HTMLTextAreaElement>('#brief-message');
+    const budget = form.querySelector<HTMLSelectElement>('#brief-budget');
+    const start = form.querySelector<HTMLSelectElement>('#brief-start');
+    const name = form.querySelector<HTMLInputElement>('#brief-name');
+    const longNote = form.querySelector<HTMLElement>('[data-brief-long]');
+    const status = form.querySelector<HTMLElement>('[data-brief-status]');
+    if (!fieldset || !message || !budget || !start || !name || !longNote || !status) return;
+
+    form.noValidate = true;
+
+    const describe = (el: HTMLElement, hintId: string, errorId: string, invalid: boolean) => {
+      const error = document.getElementById(errorId);
+      if (error) error.hidden = !invalid;
+      el.setAttribute('aria-describedby', invalid ? `${hintId} ${errorId}` : hintId);
+      if (invalid) el.setAttribute('aria-invalid', 'true');
+      else el.removeAttribute('aria-invalid');
+    };
+
+    const selected = () => radios.find((r) => r.checked);
+    const checkService = () => {
+      const ok = Boolean(selected());
+      describe(fieldset, 'brief-service-hint', 'brief-service-error', !ok);
+      return ok;
+    };
+    const checkMessage = () => {
+      const ok = message.value.trim().length > 0;
+      describe(message, 'brief-message-hint', 'brief-message-error', !ok);
+      return ok;
+    };
+
+    // Validate on blur; clear errors as soon as the visitor fixes them.
+    fieldset.addEventListener('focusout', (event) => {
+      const next = (event as FocusEvent).relatedTarget as Node | null;
+      if (!next || !fieldset.contains(next)) checkService();
+    });
+    fieldset.addEventListener('change', checkService);
+    message.addEventListener('blur', checkMessage);
+    message.addEventListener('input', () => {
+      if (message.hasAttribute('aria-invalid')) checkMessage();
+    });
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const serviceOk = checkService();
+      const messageOk = checkMessage();
+      if (!serviceOk) return (radios.find((r) => r.checked) ?? radios[0])?.focus();
+      if (!messageOk) return message.focus();
+
+      const or = (value: string) => value.trim() || copy.notSpecified;
+      const serviceLabel = selected()?.dataset.label ?? '';
+      const body = [
+        copy.greeting,
+        '',
+        `${copy.service}: ${serviceLabel}`,
+        `${copy.budget}: ${or(budget.value)}`,
+        `${copy.start}: ${or(start.value)}`,
+        `${copy.name}: ${or(name.value)}`,
+        '',
+        message.value.trim().replace(/\r?\n/g, '\r\n'),
+      ].join('\r\n'); // RFC 6068: CRLF line breaks (%0D%0A) in a mailto body
+      const encodedBody = encodeURIComponent(body);
+
+      longNote.hidden = encodedBody.length <= MAX_ENCODED_BODY;
+      longNote.textContent = longNote.hidden ? '' : copy.longBrief;
+
+      const subject = encodeURIComponent(`${copy.subject}: ${serviceLabel}`);
+      window.location.href = `mailto:${copy.email}?subject=${subject}&body=${encodedBody}`;
+
+      // Status: the email address becomes a real link inside the sentence.
+      const [before, after = ''] = copy.opened.split('{email}');
+      const link = document.createElement('a');
+      link.href = `mailto:${copy.email}`;
+      link.textContent = copy.email;
+      status.replaceChildren(before, link, after);
+    });
+
+    // Service handoff (?service=a…f|custom).
+    const choose = (id: string | null) => {
+      const radio = radios.find((r) => r.value === id);
+      if (!radio) return false;
+      radio.checked = true;
+      checkService();
+      return true;
+    };
+
+    const params = new URLSearchParams(window.location.search);
+    if (choose(params.get('service')) && window.location.hash === '#contact') {
+      // Wait for the browser's own jump to #contact, which would otherwise drop the focus.
+      const focusMessage = () => requestAnimationFrame(() => message.focus());
+      if (document.readyState === 'complete') focusMessage();
+      else window.addEventListener('load', focusMessage, { once: true });
+    }
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    document.addEventListener('click', (event) => {
+      const target = event.target as Element | null;
+      const link = target?.closest<HTMLAnchorElement>('a[data-service-link]');
+      if (!link || event.defaultPrevented || event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const url = new URL(link.href);
+      if (url.pathname !== window.location.pathname) return;
+      if (!choose(link.dataset.serviceLink ?? null)) return;
+      event.preventDefault();
+      history.pushState(null, '', url);
+      const contact = document.getElementById('contact') ?? form;
+      contact.scrollIntoView({ behavior: reduceMotion.matches ? 'auto' : 'smooth', block: 'start' });
+      message.focus({ preventScroll: true });
+    });
+  }
+
+  document.querySelectorAll<HTMLFormElement>('form[data-brief]').forEach(setup);
+</script>
+
+<style>
+  .brief { display: grid; gap: var(--s-5); }
+
+  .brief__fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+  .brief__legend {
+    padding: 0;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .brief__hint { font-size: var(--step--1); color: var(--muted); }
+  .brief__choices {
+    display: grid;
+    gap: var(--s-1) var(--s-4);
+    grid-template-columns: minmax(0, 1fr);
+    margin-top: var(--s-3);
+  }
+  @media (min-width: 640px) {
+    .brief__choices { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  .brief__choice {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    min-height: 44px;
+    padding: var(--s-2) var(--s-3);
+    border: 1px solid var(--line);
+    border-radius: var(--r-btn);
+    background: var(--surface);
+    cursor: pointer;
+  }
+  .brief__choice:hover { border-color: var(--line-strong); }
+  .brief__choice:has(:checked) { border-color: var(--sea); box-shadow: inset 0 0 0 1px var(--sea); }
+  .brief__choice input {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--sea-strong);
+  }
+
+  .brief__row {
+    display: grid;
+    gap: var(--s-5);
+    grid-template-columns: minmax(0, 1fr);
+  }
+  @media (min-width: 640px) {
+    .brief__row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  .brief__field { display: grid; gap: var(--s-2); min-width: 0; }
+  .brief__field label { font-weight: 600; color: var(--ink); }
+  .brief__field label + .brief__hint { margin-top: calc(-1 * var(--s-2)); }
+
+  .brief input[type="text"],
+  .brief select,
+  .brief textarea {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-btn);
+    background: var(--surface);
+    color: var(--ink);
+    line-height: 1.4;
+  }
+  .brief textarea { resize: vertical; min-height: 9rem; }
+  .brief textarea::placeholder { color: var(--muted); opacity: 1; }
+  .brief [aria-invalid="true"]:is(input, textarea) { border-color: currentColor; border-width: 2px; }
+  .brief__fieldset[aria-invalid="true"] .brief__choice { border-color: var(--line-strong); }
+
+  .brief__error {
+    margin-top: var(--s-2);
+    padding-left: var(--s-3);
+    border-left: 3px solid var(--buoy-ink);
+    font-size: var(--step--1);
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .brief__helper, .brief__long { font-size: var(--step--1); color: var(--muted); max-width: var(--measure); }
+  .brief__long { color: var(--ink); }
+  .brief :global(.btn) { justify-self: start; }
+  .brief__status { min-height: 1.6em; font-size: var(--step--1); color: var(--ink); max-width: var(--measure); }
+</style>

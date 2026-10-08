@@ -1,0 +1,63 @@
+---
+/**
+ * One case study in one locale. Used by /work/[slug]/ and /it/lavori/[slug]/
+ * (the underscore keeps this file out of the routes).
+ */
+import CaseStudyLayout from '../../components/CaseStudyLayout.astro';
+import type { SpecRowItem } from '../../components/SpecRows.astro';
+import MockupVstats from '../../components/mockups/MockupVstats.astro';
+import MockupDesktop from '../../components/mockups/MockupDesktop.astro';
+import MockupTeams from '../../components/mockups/MockupTeams.astro';
+import MockupIvpiter from '../../components/mockups/MockupIvpiter.astro';
+import DiagramArchitecture from '../../components/diagrams/DiagramArchitecture.astro';
+import DiagramStream from '../../components/diagrams/DiagramStream.astro';
+import DiagramPipeline from '../../components/diagrams/DiagramPipeline.astro';
+import DiagramOAuth from '../../components/diagrams/DiagramOAuth.astro';
+import { caseStudies } from '../../data/case-studies';
+import { pageMeta } from '../../data/meta';
+import type { ProjectSlug } from '../../data/projects';
+import { useStrings, type Locale } from '../../i18n';
+
+interface Props {
+  slug: ProjectSlug;
+  locale: Locale;
+}
+const { slug, locale } = Astro.props;
+
+const visuals = {
+  vstats: { Mockup: MockupVstats, Diagram: DiagramArchitecture },
+  'vstats-desktop': { Mockup: MockupDesktop, Diagram: DiagramStream },
+  'vstats-teams': { Mockup: MockupTeams, Diagram: DiagramPipeline },
+  ivpiter: { Mockup: MockupIvpiter, Diagram: DiagramOAuth },
+} as const;
+const { Mockup, Diagram } = visuals[slug];
+
+const study = caseStudies[slug];
+const intro = study[locale];
+const meta = pageMeta[slug][locale];
+const labels = useStrings(locale).caseStudy.spec;
+const spec: SpecRowItem[] = intro.spec.map(({ key, value, links }) => ({ label: labels[key], value, links }));
+const isIt = locale === 'it';
+---
+
+<CaseStudyLayout
+  locale={locale}
+  slug={slug}
+  title={meta.title}
+  description={meta.description}
+  h1={intro.h1}
+  chips={intro.chips}
+  oneLiner={intro.oneLiner}
+  spec={spec}
+  highlights={study.highlights}
+  stack={study.stack}
+  numbers={study.numbers}
+  related={intro.related}
+>
+  <Mockup slot="mockup" locale={locale} />
+  <p slot="problem">{intro.problem}</p>
+  <p slot="built">{study.built}</p>
+  <Diagram slot="diagram" />
+  <p slot="outcome">{intro.outcome}</p>
+  {isIt && <p slot="outcome-en">{study.en.outcome}</p>}
+</CaseStudyLayout>

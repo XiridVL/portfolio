@@ -1,0 +1,77 @@
+---
+/**
+ * Page shell: <html lang>, BaseHead, skip link, Header, <main id="main">,
+ * Footer, MobileCtaBar. Locale and route are detected from the URL; pass them
+ * explicitly to override.
+ *
+ *   <BaseLayout title="…" description="…">…sections…</BaseLayout>
+ *
+ * Slots: default → inside <main>; "head" → extra tags at the end of <head>.
+ */
+import '../styles/tokens.css';
+import '../styles/global.css';
+import BaseHead from './BaseHead.astro';
+import Header from './Header.astro';
+import Footer from './Footer.astro';
+import MobileCtaBar from './MobileCtaBar.astro';
+import { localeFromPath, localeMeta, matchRoute, useStrings, type Locale, type RouteKey } from '../i18n';
+
+interface Props {
+  title: string;
+  description: string;
+  locale?: Locale;
+  /** Defaults to the route matched from the URL; set `null` for pages outside the slug map (404). */
+  routeKey?: RouteKey | null;
+  ogImage?: string;
+  ogType?: 'website' | 'article';
+  noindex?: boolean;
+  jsonLd?: unknown;
+  /** Hide the sticky mobile CTA bar (e.g. 404). */
+  hideMobileCta?: boolean;
+  class?: string;
+}
+
+const matched = matchRoute(Astro.url.pathname);
+const {
+  title,
+  description,
+  locale = matched?.locale ?? localeFromPath(Astro.url.pathname),
+  routeKey = matched?.key,
+  ogImage,
+  ogType,
+  noindex,
+  jsonLd,
+  hideMobileCta = false,
+  class: className,
+} = Astro.props;
+const key = routeKey ?? undefined;
+const t = useStrings(locale);
+const onHome = key === 'home';
+---
+
+<!doctype html>
+<html lang={localeMeta[locale].htmlLang} class={className}>
+  <head>
+    <BaseHead
+      locale={locale}
+      title={title}
+      description={description}
+      routeKey={key}
+      ogImage={ogImage}
+      ogType={ogType}
+      noindex={noindex}
+      jsonLd={jsonLd}
+    >
+      <slot name="head" />
+    </BaseHead>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">{t.skipLink}</a>
+    <Header locale={locale} routeKey={key} />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <Footer locale={locale} routeKey={key} />
+    {!hideMobileCta && <MobileCtaBar locale={locale} onHome={onHome} />}
+  </body>
+</html>

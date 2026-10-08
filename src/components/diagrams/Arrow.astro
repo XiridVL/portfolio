@@ -1,0 +1,17 @@
+---
+/** A connector with optional arrowheads (see geometry.ts). Dashed for "from outside" links. */
+import { connector, type Bend, type Heads, type Pt } from './geometry';
+
+interface Props {
+  from: Pt;
+  to: Pt;
+  bend?: Bend;
+  heads?: Heads;
+  dashed?: boolean;
+}
+const { from, to, bend = 'straight', heads = 'end', dashed = false } = Astro.props;
+const c = connector(from, to, bend, heads);
+---
+
+<path class:list={['d-line', { 'd-line--dashed': dashed }]} d={c.d} />
+{c.heads.map((points) => <polygon class="d-head" points={points} />)}

@@ -1,0 +1,37 @@
+---
+/**
+ * Standard section opening: horizon rule + mono label, H2, optional intro.
+ * The H2 gets `id="{id}-title"` so the <section> can use aria-labelledby.
+ *
+ *   <section id="work" class="section" aria-labelledby="work-title">
+ *     <div class="container">
+ *       <SectionHeader id="work" number="01" label="WORK" title="Real products, live or in beta" intro="…" />
+ */
+import HorizonRule from './HorizonRule.astro';
+
+interface Props {
+  /** Section id; H2 id becomes `${id}-title`. */
+  id: string;
+  number?: string;
+  label?: string;
+  title: string;
+  intro?: string;
+  /** Visually hide the heading (e.g. Soundings "Proof in numbers."). */
+  hideTitle?: boolean;
+  class?: string;
+}
+const { id, number, label, title, intro, hideTitle = false, class: className } = Astro.props;
+---
+
+<header class:list={['section-header', className]}>
+  {(label || number) && <HorizonRule number={number} label={label} />}
+  <h2 id={`${id}-title`} class:list={{ 'visually-hidden': hideTitle }}>{title}</h2>
+  {intro && <p class="section-header__intro lead">{intro}</p>}
+  <slot />
+</header>
+
+<style>
+  .section-header { margin-bottom: var(--s-7); }
+  .section-header h2 { margin-top: var(--s-6); max-width: 22ch; }
+  .section-header__intro { margin-top: var(--s-4); color: var(--muted); }
+</style>

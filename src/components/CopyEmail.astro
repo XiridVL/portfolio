@@ -1,0 +1,71 @@
+---
+/**
+ * Large email link + Copy button. Announces "Email address copied" in its own
+ * aria-live region; if the Clipboard API fails it selects the address and says
+ * "Press Ctrl+C to copy".
+ */
+import { site } from '../data/site';
+import { useStrings, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+  email?: string;
+  class?: string;
+}
+const { locale, email = site.email, class: className } = Astro.props;
+const t = useStrings(locale).copyEmail;
+---
+
+<div class:list={['copy-email', className]} data-copy-email>
+  <a class="copy-email__link" href={`mailto:${email}`} data-copy-email-text>{email}</a>
+  <button type="button" class="copy-email__button" data-copy-email-button data-copied={t.copied} data-fallback={t.fallback}>
+    {t.button}
+  </button>
+  <p class="copy-email__status" aria-live="polite" data-copy-email-status></p>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-copy-email]').forEach((root) => {
+    const button = root.querySelector<HTMLButtonElement>('[data-copy-email-button]');
+    const text = root.querySelector<HTMLElement>('[data-copy-email-text]');
+    const status = root.querySelector<HTMLElement>('[data-copy-email-status]');
+    if (!button || !text || !status) return;
+    button.addEventListener('click', async () => {
+      const value = text.textContent?.trim() ?? '';
+      try {
+        await navigator.clipboard.writeText(value);
+        status.textContent = button.dataset.copied ?? '';
+      } catch {
+        const range = document.createRange();
+        range.selectNodeContents(text);
+        const selection = window.getSelection();
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+        status.textContent = button.dataset.fallback ?? '';
+      }
+    });
+  });
+</script>
+
+<style>
+  .copy-email { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-4); }
+  .copy-email__link {
+    font-family: var(--font-display);
+    font-weight: 650;
+    font-size: var(--step-3);
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+  .copy-email__button {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0 var(--s-4);
+    border: 1.5px solid var(--sea);
+    border-radius: var(--r-btn);
+    background: none;
+    color: var(--sea);
+    font-weight: 600;
+  }
+  .copy-email__button:hover { background: var(--surface-2); color: var(--ink); }
+  .copy-email__status { flex-basis: 100%; min-height: 1.6em; font-size: var(--step--1); color: var(--muted); }
+</style>

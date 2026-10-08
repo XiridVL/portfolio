@@ -1,0 +1,264 @@
+/* Global base styles and utility classes. Tokens live in tokens.css. */
+
+/* ---------- Metric-matched fallbacks (CLS 0 while web fonts swap in) ---------- */
+@font-face {
+  font-family: "Bricolage Fallback";
+  src: local("Arial"), local("Helvetica"), local("Liberation Sans");
+  size-adjust: 104%;
+  ascent-override: 92%;
+}
+@font-face {
+  font-family: "Plex Fallback";
+  src: local("Arial"), local("Helvetica"), local("Liberation Sans");
+  size-adjust: 100%;
+}
+
+/* ---------- Reset ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; }
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+}
+body {
+  min-height: 100dvh;
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+@media (min-width: 960px) {
+  body { font-size: 1.0625rem; }
+}
+img, svg, video, canvas, picture { display: block; max-width: 100%; }
+svg { flex-shrink: 0; }
+input, button, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+p, li, dd, figcaption, blockquote { text-wrap: pretty; overflow-wrap: break-word; }
+ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
+table { border-collapse: collapse; }
+[hidden] { display: none !important; }
+
+/* Theme switch: colours only (spec §12.7). */
+body, body *:not(svg *) {
+  transition-property: background-color, color, border-color;
+  transition-duration: var(--dur-2);
+  transition-timing-function: ease;
+}
+/* …except where components animate other properties; they set their own transition. */
+
+/* ---------- Typography ---------- */
+h1, h2, h3, h4 { font-family: var(--font-display); color: var(--ink); text-wrap: balance; }
+h1, .h1 {
+  font-family: var(--font-display);
+  font-size: var(--step-6);
+  font-weight: 760;
+  font-stretch: 88%;
+  font-variation-settings: "wdth" 88, "opsz" 96;
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+h2, .h2 {
+  font-family: var(--font-display);
+  font-size: var(--step-4);
+  font-weight: 700;
+  font-stretch: 92%;
+  font-variation-settings: "wdth" 92;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+}
+h3, .h3 {
+  font-family: var(--font-display);
+  font-size: var(--step-3);
+  font-weight: 650;
+  line-height: 1.2;
+}
+h4, .h4 { font-size: var(--step-1); font-weight: 600; line-height: 1.3; }
+strong, b { font-weight: 600; }
+code, kbd, samp, pre { font-family: var(--font-mono); font-size: 0.92em; }
+
+a { color: var(--sea); text-decoration-thickness: 1px; text-underline-offset: 0.18em; }
+a:hover { color: var(--sea-strong-hover); text-decoration-thickness: 2px; }
+:root[data-theme="dark"] a:hover { color: var(--sea-strong-hover); }
+
+/* ---------- Focus (spec §13) ---------- */
+:focus-visible {
+  outline: 2px solid var(--sea-strong);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+:focus:not(:focus-visible) { outline: none; }
+
+/* ---------- Layout utilities ---------- */
+.container {
+  width: 100%;
+  max-width: calc(var(--container) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+.container--reading { max-width: calc(var(--reading) + 2 * var(--gutter)); }
+.container--breakout { max-width: calc(var(--breakout) + 2 * var(--gutter)); }
+
+/* 12-column grid from 960px; single column below. */
+.grid-12 { display: grid; gap: var(--s-5); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 960px) {
+  .grid-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--s-6); }
+}
+
+.section {
+  padding-block: var(--section-pad);
+  scroll-margin-top: 80px;
+}
+/* Below-the-fold sections: skip rendering work until near the viewport. */
+.section--deferred { content-visibility: auto; contain-intrinsic-size: auto 900px; }
+
+.stack > * + * { margin-block-start: var(--stack-gap, var(--s-4)); }
+.cluster { display: flex; flex-wrap: wrap; gap: var(--cluster-gap, var(--s-2)); align-items: center; }
+.measure { max-width: var(--measure); }
+
+/* Long-form text (case studies, privacy). */
+.prose { max-width: var(--measure); }
+.prose > * + * { margin-block-start: 1em; }
+.prose h2 { margin-block-start: var(--s-8); font-size: var(--step-3); }
+.prose h3 { margin-block-start: var(--s-6); font-size: var(--step-2); }
+.prose ul, .prose ol { padding-inline-start: 1.25em; }
+.prose li + li { margin-block-start: 0.4em; }
+
+/* ---------- Text utilities ---------- */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.tabular { font-variant-numeric: tabular-nums; }
+/* Mono label: uppercase, tracked, never under 12px. */
+.label {
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+.eyebrow { font-weight: 400; line-height: 1.5; font-family: var(--font-mono); font-size: var(--step--2); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.muted { color: var(--muted); }
+.lead { font-size: var(--step-1); color: var(--ink); max-width: var(--measure); }
+@media (min-width: 960px) { .lead { font-size: var(--step-2); line-height: 1.5; } }
+.small { font-size: var(--step--1); }
+/* Large tabular figures: soundings, prices. */
+.figure-xl {
+  font-family: var(--font-mono);
+  font-size: var(--step-5);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Motifs ---------- */
+/* Horizon rule: full-width 1.5px line. */
+.horizon { display: block; height: 0; border: 0; border-top: 1.5px solid var(--horizon); width: 100%; }
+/* 8px amber buoy dot. */
+.buoy-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--buoy);
+  flex: none;
+}
+/* Bullets with buoy-dot markers (service cards etc.). */
+.buoy-list { list-style: none; padding: 0; }
+.buoy-list > li { position: relative; padding-inline-start: 1.25em; }
+.buoy-list > li + li { margin-block-start: var(--s-2); }
+.buoy-list > li::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0.62em;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--buoy);
+}
+
+/* Card surface: shadow in light mode, hairline border in dark (shadow token is none there). */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow);
+}
+/* Tinted band (sea fog). */
+.surface-2 { background: var(--surface-2); }
+
+/* Window frame shared by mockups: surface body, surface-2 title bar, three dots. */
+.frame {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-frame);
+  overflow: hidden;
+}
+.frame__bar {
+  display: flex; align-items: center; gap: 6px;
+  height: 28px; padding-inline: 12px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  color: var(--muted);
+}
+.frame__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); flex: none; }
+
+/* Aspect-ratio boxes (mockups 16:10). */
+.ratio-16x10 { aspect-ratio: 16 / 10; }
+
+/* ---------- Skip link ---------- */
+main:focus { outline: none; } /* main#main is focused programmatically by the skip link */
+.skip-link {
+  position: absolute;
+  left: var(--s-4); top: var(--s-2);
+  z-index: 100;
+  padding: var(--s-3) var(--s-4);
+  background: var(--sea-strong);
+  color: var(--on-sea);
+  font-weight: 600;
+  border-radius: var(--r-btn);
+  transform: translateY(-200%);
+}
+.skip-link:focus, .skip-link:focus-visible { transform: none; color: var(--on-sea); }
+
+/* ---------- Section reveal (CSS only, no JS fallback needed) ---------- */
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: reveal-rise linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 40%;
+  }
+  @keyframes reveal-rise {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+/* ---------- View transitions (spec §12.5) ---------- */
+@view-transition { navigation: auto; }
+::view-transition-group(*) { animation-duration: 300ms; animation-timing-function: var(--ease-tide); }
+
+/* ---------- Reduced motion (spec §12.9) ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+  html { scroll-behavior: auto; }
+  @view-transition { navigation: none; }
+}

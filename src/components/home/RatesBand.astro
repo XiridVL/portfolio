@@ -1,0 +1,39 @@
+---
+/** Hourly and day rates with payment terms (spec §3.4), under a horizon rule. */
+import HorizonRule from '../HorizonRule.astro';
+import { homeCopy } from '../../i18n/home';
+import type { Locale } from '../../i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const copy = homeCopy[locale].services.rates;
+---
+
+<div class="rates-band">
+  <HorizonRule />
+  <p class="rates-band__text">
+    <strong class="rates-band__lead mono">{copy.lead}</strong>
+    {copy.text}
+  </p>
+</div>
+
+<style>
+  .rates-band__text {
+    max-width: 80ch;
+    padding-top: var(--s-4);
+    color: var(--muted);
+  }
+  .rates-band__lead {
+    display: block;
+    margin-bottom: var(--s-2);
+    font-size: var(--step-3);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  @media (min-width: 768px) {
+    .rates-band__lead { display: inline; margin: 0 var(--s-2) 0 0; font-size: var(--step-2); }
+  }
+</style>

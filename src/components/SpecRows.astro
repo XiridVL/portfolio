@@ -1,0 +1,103 @@
+---
+/**
+ * Spec rows (spec §8.6): mono label, dotted leader, sans value, as a <dl>.
+ * A row may carry `links` instead of (or after) `value`; external links get ↗
+ * and the "opens in a new tab" hint.
+ *
+ * size="sm" for cards, "md" (default) for the case-study spec sheet.
+ */
+import ExternalLink from './ExternalLink.astro';
+import type { Locale } from '../i18n/locales';
+
+export interface SpecRowItem {
+  label: string;
+  value?: string;
+  links?: { label: string; href: string; external?: boolean }[];
+}
+
+interface Props {
+  rows: SpecRowItem[];
+  locale?: Locale;
+  size?: 'sm' | 'md';
+  label?: string;
+  class?: string;
+}
+const { rows, locale = 'en', size = 'md', label, class: className } = Astro.props;
+---
+
+<dl class:list={['spec-rows', `spec-rows--${size}`, className]} aria-label={label}>
+  {
+    rows.map((row) => (
+      <div class="spec-rows__row">
+        <dt class="spec-rows__label">{row.label}</dt>
+        <dd class="spec-rows__value">
+          {row.value}
+          {row.links && row.links.length > 0 && (
+            <span class="spec-rows__links">
+              {row.links.map((link, i) => (
+                <>
+                  {i > 0 && <span aria-hidden="true"> · </span>}
+                  {link.external === false || link.href.startsWith('/') ? (
+                    <a href={link.href}>{link.label}</a>
+                  ) : (
+                    <ExternalLink href={link.href} locale={locale}>{link.label}</ExternalLink>
+                  )}
+                </>
+              ))}
+            </span>
+          )}
+        </dd>
+      </div>
+    ))
+  }
+</dl>
+
+<style>
+  /* Container query: the row layout follows the list's own width (cards and case headers). */
+  .spec-rows { margin: 0; container-type: inline-size; }
+  .spec-rows__row {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-2);
+    padding-block: var(--s-1);
+  }
+  .spec-rows__label {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-2);
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  /* Dotted leader between label and value. */
+  .spec-rows__label::after {
+    content: "";
+    flex: 1 1 var(--s-5);
+    min-width: var(--s-5);
+    border-bottom: 1px dotted var(--line-strong);
+    transform: translateY(-0.3em);
+  }
+  /* One-line values sit flush right after the leader; a value that wraps reads
+     as a left-aligned block instead of a ragged right edge. */
+  .spec-rows__value {
+    flex: 0 1 auto;
+    margin: 0;
+    text-align: left;
+    color: var(--ink);
+    max-width: 72%;
+  }
+  .spec-rows__links a { white-space: nowrap; }
+  .spec-rows--sm .spec-rows__value { font-size: var(--step--1); }
+  .spec-rows--md .spec-rows__row { padding-block: var(--s-2); }
+  /* Narrow: label above value, no leader. */
+  @container (max-width: 479px) {
+    .spec-rows__row { flex-wrap: wrap; row-gap: 0; }
+    .spec-rows__label::after { display: none; }
+    .spec-rows__value { flex-basis: 100%; max-width: none; }
+  }
+</style>

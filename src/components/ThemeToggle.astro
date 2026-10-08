@@ -1,0 +1,98 @@
+---
+/**
+ * Three-state theme button: system → light → dark → system.
+ * Stores the choice in localStorage `ac-theme` (try/catch); "system" removes it.
+ * The inline theme-init script in BaseHead applies the stored theme before paint.
+ * Any number of toggles can exist on a page (header + mobile menu); they stay in sync.
+ */
+import { useStrings, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+  class?: string;
+}
+const { locale, class: className } = Astro.props;
+const t = useStrings(locale);
+---
+
+<button
+  type="button"
+  class:list={['theme-toggle', className]}
+  data-theme-toggle
+  data-state="system"
+  data-label-system={t.theme.system}
+  data-label-light={t.theme.light}
+  data-label-dark={t.theme.dark}
+  aria-label={t.theme.system}
+>
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+    <path class="theme-toggle__sun" d="M5 16a7 7 0 0 1 14 0Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path>
+    <path class="theme-toggle__half" d="M12 9a7 7 0 0 0-7 7h7Z"></path>
+    <path d="M2 16h20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+    <path d="M7 19.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".5"></path>
+  </svg>
+</button>
+
+<script>
+  type ThemeState = 'system' | 'light' | 'dark';
+  const KEY = 'ac-theme';
+  const next: Record<ThemeState, ThemeState> = { system: 'light', light: 'dark', dark: 'system' };
+
+  function read(): ThemeState {
+    try {
+      const v = localStorage.getItem(KEY);
+      return v === 'light' || v === 'dark' ? v : 'system';
+    } catch {
+      return 'system';
+    }
+  }
+
+  function apply(state: ThemeState) {
+    const root = document.documentElement;
+    if (state === 'system') root.removeAttribute('data-theme');
+    else root.setAttribute('data-theme', state);
+    try {
+      if (state === 'system') localStorage.removeItem(KEY);
+      else localStorage.setItem(KEY, state);
+    } catch {
+      /* storage unavailable: the choice lasts for this page only */
+    }
+    // Browser bar colour: the chosen theme's background, or back to the media-based pair for system.
+    document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((meta) => {
+      const dark = state === 'dark' || (state === 'system' && meta.media.includes('dark'));
+      meta.content = dark ? '#0A1316' : '#F3F1EA';
+    });
+    document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]').forEach((btn) => {
+      btn.dataset.state = state;
+      const label = btn.dataset[`label${state[0]!.toUpperCase()}${state.slice(1)}` as 'labelSystem'];
+      if (label) btn.setAttribute('aria-label', label);
+    });
+  }
+
+  apply(read());
+  document.addEventListener('click', (event) => {
+    const btn = (event.target as Element | null)?.closest<HTMLButtonElement>('[data-theme-toggle]');
+    if (!btn) return;
+    apply(next[(btn.dataset.state as ThemeState) ?? 'system']);
+  });
+</script>
+
+<style>
+  .theme-toggle {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--r-btn);
+    background: none;
+    color: var(--ink);
+  }
+  .theme-toggle:hover { background: var(--surface-2); }
+  .theme-toggle__sun { fill: none; }
+  .theme-toggle__half { fill: currentColor; }
+  .theme-toggle[data-state='light'] .theme-toggle__sun { fill: var(--buoy); stroke: var(--buoy); }
+  .theme-toggle[data-state='light'] .theme-toggle__half { fill: var(--buoy); }
+  .theme-toggle[data-state='dark'] .theme-toggle__half { fill: none; }
+</style>

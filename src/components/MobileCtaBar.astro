@@ -1,0 +1,89 @@
+---
+/**
+ * Sticky mobile CTA bar (<768px only, spec §2.2). Appears once the hero
+ * (#top) leaves the viewport and hides while #contact or the footer is in view. On pages
+ * without a #top hero it appears once the header sentinel scrolls away.
+ */
+import { site } from '../data/site';
+import { sectionHref, useStrings, type Locale } from '../i18n';
+import Button from './Button.astro';
+
+interface Props {
+  locale: Locale;
+  onHome?: boolean;
+}
+const { locale, onHome = false } = Astro.props;
+const t = useStrings(locale);
+---
+
+<div class="mobile-cta" data-mobile-cta hidden>
+  <Button href={sectionHref('contact', locale, onHome)} arrow="right" class="mobile-cta__quote">{t.mobileCta.quote}</Button>
+  <a class="mobile-cta__mail" href={`mailto:${site.email}`} aria-label={t.mobileCta.email}>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+      <rect x="3" y="5.5" width="18" height="13" rx="1.5" stroke="currentColor" stroke-width="1.5"></rect>
+      <path d="M3.5 6.5l8.5 6.5 8.5-6.5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path>
+    </svg>
+  </a>
+</div>
+
+<script>
+  const bar = document.querySelector<HTMLElement>('[data-mobile-cta]');
+  if (bar && 'IntersectionObserver' in window) {
+    const hero = document.getElementById('top') ?? document.querySelector<HTMLElement>('[data-header-sentinel]');
+    const contact = document.getElementById('contact');
+    const footer = document.querySelector<HTMLElement>('.site-footer');
+    let heroVisible = true;
+    let contactVisible = false;
+    let footerVisible = false;
+    const update = () => {
+      const show = !heroVisible && !contactVisible && !footerVisible;
+      bar.hidden = false;
+      bar.classList.toggle('is-visible', show);
+      bar.inert = !show;
+    };
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.target === hero) heroVisible = entry.isIntersecting;
+        if (entry.target === contact) contactVisible = entry.isIntersecting;
+        if (entry.target === footer) footerVisible = entry.isIntersecting;
+      }
+      update();
+    });
+    if (hero) observer.observe(hero);
+    if (contact) observer.observe(contact);
+    if (footer) observer.observe(footer);
+  }
+</script>
+
+<style>
+  .mobile-cta {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 40;
+    display: flex;
+    gap: var(--s-2);
+    padding: var(--s-2) var(--gutter) calc(var(--s-2) + env(safe-area-inset-bottom));
+    background: var(--bg);
+    border-top: 1.5px solid var(--horizon);
+    transform: translateY(110%);
+    transition: transform var(--dur-2) var(--ease-tide);
+  }
+  .mobile-cta.is-visible { transform: none; }
+  .mobile-cta :global(.mobile-cta__quote) { flex: 1; }
+  .mobile-cta__mail {
+    display: inline-grid;
+    place-items: center;
+    width: 48px;
+    min-height: 44px;
+    border: 1.5px solid var(--sea);
+    border-radius: var(--r-btn);
+    color: var(--sea);
+  }
+  @media (min-width: 768px) {
+    .mobile-cta { display: none; }
+  }
+  /* Reserve the bar's height in scroll padding so a focused control is never scrolled under it (WCAG 2.4.11). */
+  @media (max-width: 767px) {
+    :global(html) { scroll-padding-bottom: calc(61px + env(safe-area-inset-bottom) + var(--s-4)); }
+  }
+</style>

@@ -1,0 +1,74 @@
+---
+/**
+ * League match room (spec §10.5): phase stepper with CHECK-IN active, a 120s
+ * countdown ring, two columns of five anonymous seats with "Check-in 08/10"
+ * and a progress bar, and a map-veto row of five lettered tiles, two struck.
+ * No branding. Static.
+ */
+import Frame from './Frame.astro';
+import type { Locale } from '../../i18n';
+
+interface Props {
+  locale?: Locale;
+  class?: string;
+}
+const { locale, class: className } = Astro.props;
+
+const steps = ['CHECK-IN', 'DUEL', 'DRAFT', 'VETO', 'LOBBY']
+  .map((label, i) => {
+    const x = 36 + i * 118;
+    const box =
+      i === 0
+        ? `<rect class="k-sea" x="${x}" y="14" width="96" height="28" rx="14"/><text class="k-on mid" x="${x + 48}" y="32">${label}</text>`
+        : `<rect class="o-ls" x="${x + 0.5}" y="14.5" width="95" height="27" rx="13.5"/><text class="mid" x="${x + 48}" y="32">${label}</text>`;
+    return i === 0 ? box : `<text class="mid" x="${x - 11}" y="32">→</text>${box}`;
+  })
+  .join('');
+
+// Eight of ten seats checked in; the last seat in each column is still open.
+const seats = Array.from({ length: 10 }, (_, i) => {
+  const cx = i < 5 ? 150 : 490;
+  const cy = 80 + (i % 5) * 40;
+  const open = i % 5 === 4;
+  return `<circle class="${open ? 'o-ls op' : 'o-sea st'}" cx="${cx}" cy="${cy}" r="13"/>`;
+}).join('');
+
+const tiles = ['A', 'B', 'C', 'D', 'E']
+  .map((letter, i) => {
+    const x = 36 + i * 118;
+    const struck = i === 1 || i === 3;
+    return `<g${struck ? ' class="vx"' : ''}><rect class="k-s2" x="${x}" y="278" width="96" height="60" rx="4"/><text class="k-ink mid lt" x="${x + 48}" y="314">${letter}</text>${struck ? `<path class="o-ls sx" d="M${x + 8} 330l80-44"/>` : ''}</g>`;
+  })
+  .join('');
+
+const svg = [
+  steps,
+  seats,
+  // Countdown ring: full 120s, start marker at the top
+  '<circle class="o-sea rg" cx="320" cy="140" r="50"/>',
+  '<circle class="k-sf o-by" cx="320" cy="90" r="5"/>',
+  '<text class="k-ink mid big" x="320" y="148">120s</text>',
+  '<text class="mid" x="320" y="222">Check-in 08/10</text>',
+  '<rect class="k-s2" x="240" y="234" width="160" height="6" rx="3"/>',
+  '<rect class="k-sea" x="240" y="234" width="128" height="6" rx="3"/>',
+  tiles,
+].join('');
+---
+
+<Frame
+  class:list={['mk-ivpiter', className]}
+  locale={locale}
+  label="Illustration of a league match room: check-in timer, ten anonymous seats and a map-veto row."
+>
+  <svg viewBox="0 0 640 372" focusable="false" set:html={svg} />
+</Frame>
+
+<style is:global>
+  .mk-ivpiter .rg { stroke-width: 8; }
+  .mk-ivpiter .big { font-size: 22px; font-weight: 400; }
+  .mk-ivpiter .st { stroke-width: 2; fill: color-mix(in srgb, var(--sea) 14%, transparent); }
+  .mk-ivpiter .op { stroke-width: 1.5; stroke-dasharray: 4 3; }
+  .mk-ivpiter .lt { font-size: 18px; }
+  .mk-ivpiter .vx { opacity: 0.55; }
+  .mk-ivpiter .sx { stroke: var(--ink); stroke-width: 2; stroke-linecap: round; }
+</style>

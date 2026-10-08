@@ -1,0 +1,29 @@
+---
+/**
+ * Riot Games trademark disclaimer (spec §16), verbatim.
+ *   scope="site"    footer line ("This site and its projects…"); IT pages add the EN line
+ *   scope="grid"    small print under the work grid (includes the mockups/IVPITER sentences)
+ *   scope="project" case-study pages ("This project…"); IT pages add the EN line
+ */
+import { useStrings, type Locale } from '../i18n';
+
+interface Props {
+  scope: 'site' | 'grid' | 'project';
+  locale: Locale;
+  class?: string;
+}
+const { scope, locale, class: className } = Astro.props;
+const local = useStrings(locale).disclaimer[scope];
+const english = useStrings('en').disclaimer[scope];
+const addEnglish = locale !== 'en' && scope !== 'grid';
+---
+
+<div class:list={['riot-disclaimer', `riot-disclaimer--${scope}`, className]}>
+  <p>{local}</p>
+  {addEnglish && <p lang="en">{english}</p>}
+</div>
+
+<style>
+  .riot-disclaimer { font-size: var(--step--1); color: var(--muted); max-width: var(--measure); }
+  .riot-disclaimer p + p { margin-top: var(--s-1); }
+</style>

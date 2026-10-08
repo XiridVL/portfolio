@@ -1,0 +1,91 @@
+/* Design tokens: "Adriatico d'inverno". Source of truth for every colour, space, radius, type step and duration. */
+:root {
+  color-scheme: light dark;
+  /* colour — light */
+  --bg: #F3F1EA;            /* salt */
+  --surface: #FFFFFF;       /* cards */
+  --surface-2: #E7E5DC;     /* sea fog: tinted bands, mockup fills, quote panel */
+  --ink: #0E1A1F;           /* 15.7:1 on bg */
+  --muted: #4A5A5E;         /* 6.4:1 on bg, 5.7:1 on surface-2 */
+  --sea: #1F5E66;           /* links, chips, contours — 6.5:1 on bg */
+  --sea-strong: #17505A;    /* primary button bg, focus ring — 8.0:1 on bg */
+  --sea-strong-hover: #0F3F47;
+  --on-sea: #FFFFFF;        /* 9.0:1 on sea-strong */
+  --buoy: #B07400;          /* amber; decorative graphics only (3.5:1 on bg) */
+  --buoy-ink: #8A5A00;      /* amber text e.g. BETA chip — 5.2:1 on bg */
+  --beta-tint: #F7EBCF;     /* BETA chip bg (buoy-ink 5.0:1 on it) */
+  --ok: #1F6E4A;            /* LIVE chip text — 5.5:1 on bg */
+  --ok-tint: #DDEFE5;       /* LIVE chip bg (5.2:1) */
+  --line: rgb(14 26 31 / .12);     /* hairlines, contour SVG */
+  --line-strong: #7A898C;   /* input borders, non-text UI — 3.2:1 on bg, 3.6:1 on surface */
+  --horizon: #0E1A1F;       /* 1.5px horizon rule */
+  --shadow: 0 1px 2px rgb(14 26 31 / .06), 0 8px 24px rgb(14 26 31 / .06);
+
+  /* spacing (4px base) */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px; --s-6: 32px;
+  --s-7: 48px; --s-8: 64px; --s-9: 96px; --s-10: 128px; --s-11: 160px;
+  --section-pad: clamp(48px, 6vw, 88px);  /* applied top and bottom: ~170px between sections at desktop */
+  --gutter: clamp(16px, 4vw, 40px);
+  --container: 1240px;
+  --measure: 64ch;
+  --reading: 720px;         /* case-study reading column */
+  --breakout: 1040px;       /* diagrams and mockups on case-study pages */
+  --header-h: 64px;
+  --header-h-compact: 56px;
+
+  /* radius */
+  --r-chip: 2px; --r-btn: 2px; --r-card: 6px; --r-frame: 10px; --r-pill: 999px;
+
+  /* type */
+  --font-display: "Bricolage Grotesque Variable", "Bricolage Fallback", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Plex Fallback", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --step--2: 0.75rem;   /* mono labels, +0.08em tracking, uppercase */
+  --step--1: 0.875rem;
+  --step-0: 1rem;
+  --step-1: 1.125rem;
+  --step-2: 1.375rem;
+  --step-3: 1.75rem;    /* H3 */
+  --step-4: clamp(1.9rem, 1.4rem + 2.2vw, 3rem);    /* H2 */
+  --step-5: clamp(2.2rem, 1.6rem + 3vw, 3.75rem);   /* sounding figures, prices */
+  --step-6: clamp(2.6rem, 1.5rem + 5vw, 5.5rem);    /* H1 */
+
+  /* motion */
+  --ease-tide: cubic-bezier(.2, .7, 0, 1);
+  --dur-1: 150ms; --dur-2: 300ms; --dur-3: 700ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0A1316; --surface: #12212A; --surface-2: #172A34;
+    --ink: #E6EBE8;        /* 15.6:1 */
+    --muted: #9AABAD;      /* 7.9:1 bg, 6.9:1 surface */
+    --sea: #6CC3C0;        /* 9.1:1 */
+    --sea-strong: #6CC3C0; --sea-strong-hover: #8AD3D0;
+    --on-sea: #0A1316;     /* 9.1:1 */
+    --buoy: #F2B43C; --buoy-ink: #F2B43C; --beta-tint: #2A2410;
+    --ok: #5FD39A; --ok-tint: #0F2A20;
+    --line: rgb(230 235 232 / .12); --line-strong: #61767C;
+    --horizon: #E6EBE8; --shadow: none;
+  }
+}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0A1316; --surface: #12212A; --surface-2: #172A34;
+  --ink: #E6EBE8; --muted: #9AABAD;
+  --sea: #6CC3C0; --sea-strong: #6CC3C0; --sea-strong-hover: #8AD3D0; --on-sea: #0A1316;
+  --buoy: #F2B43C; --buoy-ink: #F2B43C; --beta-tint: #2A2410;
+  --ok: #5FD39A; --ok-tint: #0F2A20;
+  --line: rgb(230 235 232 / .12); --line-strong: #61767C;
+  --horizon: #E6EBE8; --shadow: none;
+}
+@media (prefers-contrast: more) {
+  :root { --line: rgb(14 26 31 / .35); --muted: #33424A; }
+  :root[data-theme="dark"] { --line: rgb(230 235 232 / .4); --muted: #C2CED0; }
+}
+@media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --line: rgb(230 235 232 / .4); --muted: #C2CED0; }
+}
+html { background: var(--bg); }
+body { background: var(--bg); color: var(--ink); font: 400 var(--step-0)/1.6 var(--font-body); }

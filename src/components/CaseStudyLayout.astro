@@ -1,0 +1,229 @@
+---
+/**
+ * Shared case-study template (spec §5 and §6). Structure:
+ *  1 breadcrumb · 2 chips, H1, one-liner · 3 spec sheet · 4 hero mockup
+ *  5 problem · 6 what I built · 7 highlights · 8 how it works (diagram)
+ *  9 stack · 10 by the numbers · 11 outcome · 12 related service
+ *  13 CTA band · 14 previous/next · 15 Riot disclaimer (project variant)
+ *
+ * Italian pages (locale="it"): Italian H1/one-liner/spec/problem/outcome, then a
+ * divider "Approfondimento tecnico (in inglese)" and the English body
+ * (What I built → Outcome) inside <div lang="en">. Pass the English outcome in
+ * the `outcome-en` slot and keep highlights/stack/numbers in English.
+ *
+ * Slots:
+ *   mockup      hero mockup component (wrapped with view-transition-name mock-{slug})
+ *   problem     paragraph(s) for "The problem" (page locale)
+ *   built       paragraph(s) for "What I built" (English)
+ *   diagram     Diagram* component (SVG + <ol> text equivalent, groups with data-step)
+ *   outcome     paragraph(s) for "Outcome" (page locale)
+ *   outcome-en  IT pages only: the English outcome for the English body
+ */
+import BaseLayout from './BaseLayout.astro';
+import StatusChip from './StatusChip.astro';
+import SpecRows, { type SpecRowItem } from './SpecRows.astro';
+import Highlights, { type HighlightItem } from './Highlights.astro';
+import ChipList from './ChipList.astro';
+import Soundings, { type SoundingItem } from './Soundings.astro';
+import RelatedService from './RelatedService.astro';
+import CtaBand from './CtaBand.astro';
+import CaseNav from './CaseNav.astro';
+import RiotDisclaimer from './RiotDisclaimer.astro';
+import { getProject, transitionNames, type ChipData, type ProjectSlug } from '../data/projects';
+import type { ServiceId } from '../data/services';
+import { routes, sectionHref, useStrings, type Locale } from '../i18n';
+import { caseStudyJsonLd } from '../lib/seo';
+
+interface Props {
+  locale: Locale;
+  slug: ProjectSlug;
+  /** <title> and meta description (spec §14). */
+  title: string;
+  description: string;
+  h1: string;
+  chips: ChipData[];
+  oneLiner: string;
+  /** Spec sheet rows; use useStrings(locale).caseStudy.spec.* for labels. */
+  spec: SpecRowItem[];
+  highlights: HighlightItem[];
+  stack: string[];
+  numbers: SoundingItem[];
+  related: { lead: string; services: ServiceId[] };
+}
+
+const { locale, slug, title, description, h1, chips, oneLiner, spec, highlights, stack, numbers, related } = Astro.props;
+const t = useStrings(locale).caseStudy;
+const tEn = useStrings('en').caseStudy;
+const isIt = locale === 'it';
+const project = getProject(slug);
+const vt = transitionNames(slug);
+const workHref = sectionHref('work', locale, false);
+
+const jsonLd = caseStudyJsonLd({
+  slug,
+  locale,
+  headline: h1,
+  description,
+  crumbs: { root: t.breadcrumbRoot, rootPath: `${routes.home[locale]}#work` },
+  appDescription: oneLiner,
+});
+const hasOutcomeEn = Astro.slots.has('outcome-en');
+---
+
+<BaseLayout title={title} description={description} locale={locale} routeKey={slug} ogType="article" jsonLd={jsonLd}>
+  <article class="case-study" data-case-study>
+    <header class="case-study__intro container container--reading">
+      <nav class="case-study__crumbs" aria-label={t.breadcrumbLabel}>
+        <ol role="list">
+          <li><a href={workHref}>{t.breadcrumbRoot}</a></li>
+          <li><span aria-hidden="true">/</span> <span aria-current="page">{project.name}</span></li>
+        </ol>
+      </nav>
+      <ul class="case-study__chips" role="list">
+        {chips.map((chip) => <li><StatusChip kind={chip.kind} text={chip.text} /></li>)}
+      </ul>
+      <h1 class="case-study__title" style={`view-transition-name: ${vt.title}`}>{h1}</h1>
+      <p class="case-study__oneliner lead">{oneLiner}</p>
+      <SpecRows rows={spec} locale={locale} label={t.specLabel} class="case-study__spec" />
+    </header>
+
+    {
+      Astro.slots.has('mockup') && (
+        <div class="case-study__hero container container--breakout">
+          <div class="case-study__mockup" style={`view-transition-name: ${vt.mock}`}>
+            <slot name="mockup" />
+          </div>
+        </div>
+      )
+    }
+
+    <div class="case-study__body container container--reading">
+      <section class="case-study__section" aria-labelledby="cs-problem">
+        <h2 id="cs-problem">{t.problem}</h2>
+        <div class="prose"><slot name="problem" /></div>
+      </section>
+
+      {
+        isIt && (
+          <section class="case-study__section" aria-labelledby="cs-outcome-local">
+            <h2 id="cs-outcome-local">{t.outcome}</h2>
+            <div class="prose"><slot name="outcome" /></div>
+          </section>
+        )
+      }
+      {
+        isIt && (
+          <p class="case-study__divider">
+            <span class="buoy-dot" aria-hidden="true" />
+            <span class="label">{t.deepDive}</span>
+          </p>
+        )
+      }
+    </div>
+
+    <div class="case-study__body container container--reading" lang={isIt ? 'en' : undefined}>
+      <section class="case-study__section" aria-labelledby="cs-built">
+        <h2 id="cs-built">{tEn.built}</h2>
+        <div class="prose"><slot name="built" /></div>
+      </section>
+
+      <section class="case-study__section" aria-labelledby="cs-highlights">
+        <h2 id="cs-highlights">{tEn.highlights}</h2>
+        <Highlights items={highlights} />
+      </section>
+    </div>
+
+    {
+      Astro.slots.has('diagram') && (
+        <section class="case-study__section case-study__how container container--breakout" aria-labelledby="cs-how" lang={isIt ? 'en' : undefined}>
+          <h2 id="cs-how">{tEn.how}</h2>
+          <slot name="diagram" />
+        </section>
+      )
+    }
+
+    <div class="case-study__body container container--reading" lang={isIt ? 'en' : undefined}>
+      <section class="case-study__section" aria-labelledby="cs-stack">
+        <h2 id="cs-stack">{tEn.stack}</h2>
+        <ChipList items={stack} />
+      </section>
+
+      <section class="case-study__section" aria-labelledby="cs-numbers">
+        <h2 id="cs-numbers">{tEn.numbers}</h2>
+        <Soundings items={numbers} variant="tiles" />
+      </section>
+
+      <section class="case-study__section" aria-labelledby="cs-outcome">
+        <h2 id="cs-outcome">{tEn.outcome}</h2>
+        <div class="prose">
+          {isIt ? hasOutcomeEn && <slot name="outcome-en" /> : <slot name="outcome" />}
+        </div>
+      </section>
+    </div>
+
+    <div class="case-study__body container container--reading">
+      <RelatedService locale={locale} lead={related.lead} services={related.services} class="case-study__related" />
+    </div>
+
+    <CtaBand locale={locale} />
+
+    <div class="case-study__end container container--reading">
+      <CaseNav slug={slug} locale={locale} />
+      <RiotDisclaimer scope="project" locale={locale} class="case-study__disclaimer" />
+    </div>
+  </article>
+</BaseLayout>
+
+<script>
+  // diagram-link: hovering or focusing step n highlights every [data-step="n"]
+  // (highlight items and diagram groups) on the page.
+  const root = document.querySelector<HTMLElement>('[data-case-study]');
+  if (root) {
+    let current: string | null = null;
+    const setActive = (step: string | null) => {
+      if (step === current) return;
+      current = step;
+      root.querySelectorAll('[data-step].is-active').forEach((el) => el.classList.remove('is-active'));
+      if (step) root.querySelectorAll(`[data-step="${CSS.escape(step)}"]`).forEach((el) => el.classList.add('is-active'));
+    };
+    const stepOf = (target: EventTarget | null) =>
+      (target instanceof Element ? target.closest<HTMLElement | SVGElement>('[data-step]') : null)?.dataset.step ?? null;
+
+    root.addEventListener('pointerover', (e) => setActive(stepOf(e.target)));
+    root.addEventListener('pointerleave', () => setActive(null));
+    root.addEventListener('focusin', (e) => setActive(stepOf(e.target)));
+    root.addEventListener('focusout', (e) => {
+      if (!stepOf((e as FocusEvent).relatedTarget)) setActive(null);
+    });
+  }
+</script>
+
+<style>
+  .case-study { padding-top: var(--s-7); }
+  .case-study__crumbs ol { display: flex; gap: var(--s-2); list-style: none; padding: 0; font-family: var(--font-mono); font-size: var(--step--1); color: var(--muted); }
+  .case-study__crumbs a { display: inline-flex; align-items: center; min-height: 44px; }
+  .case-study__crumbs li { display: flex; align-items: center; gap: var(--s-2); }
+  .case-study__chips { display: flex; flex-wrap: wrap; gap: var(--s-2); list-style: none; padding: 0; margin-top: var(--s-4); }
+  .case-study__title { margin-top: var(--s-5); font-size: clamp(2rem, 1.3rem + 3vw, 3.5rem); text-wrap: pretty; }
+  .case-study__oneliner { margin-top: var(--s-5); }
+  .case-study :global(.case-study__spec) { margin-top: var(--s-6); padding-top: var(--s-3); border-top: 1.5px solid var(--horizon); }
+  .case-study__hero { margin-top: var(--s-7); }
+  .case-study__body { margin-top: var(--s-2); }
+  .case-study__section { margin-top: var(--s-8); }
+  .case-study__section > h2 { font-size: var(--step-3); margin-bottom: var(--s-4); }
+  .case-study__how > h2 { max-width: var(--reading); margin-inline: auto; }
+  .case-study__divider {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    margin-top: var(--s-8);
+    padding-top: var(--s-3);
+    border-top: 1.5px solid var(--horizon);
+    color: var(--ink);
+  }
+  .case-study :global(.case-study__related) { margin-top: var(--s-8); margin-bottom: var(--s-8); }
+  .case-study__end { padding-block: var(--s-6) var(--s-8); }
+  .case-study :global(.case-study__disclaimer) { margin-top: var(--s-6); }
+  .case-study :global([data-step].is-active) { --step-accent: var(--buoy); }
+  .case-study :global(svg [data-step].is-active) { stroke: var(--buoy); font-weight: 600; }
+</style>

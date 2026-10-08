@@ -1,0 +1,58 @@
+---
+/**
+ * Case-study highlights, numbered 01–06: mono label, bold title, 1–3 sentences.
+ * Each item carries data-step="n" and is focusable so it links to the diagram
+ * group with the same data-step (hover and keyboard focus; script in CaseStudyLayout).
+ * `text` may contain inline HTML (<em>, <a>) and is rendered with set:html.
+ */
+export interface HighlightItem {
+  /** Mono label, e.g. "PAYMENTS". */
+  label: string;
+  title: string;
+  /** 1–3 sentences; trusted inline HTML allowed. */
+  text: string;
+}
+interface Props {
+  items: HighlightItem[];
+  class?: string;
+}
+const { items, class: className } = Astro.props;
+---
+
+<ol class:list={['highlights', className]} role="list">
+  {
+    items.map((item, i) => (
+      <li class="highlights__item" data-step={i + 1} tabindex="0">
+        <span class="highlights__num mono" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+        <div>
+          <span class="highlights__label label">{item.label}</span>
+          <h3 class="highlights__title">{item.title}</h3>
+          <p class="highlights__text" set:html={item.text} />
+        </div>
+      </li>
+    ))
+  }
+</ol>
+
+<style>
+  .highlights { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--s-2); }
+  .highlights__item {
+    display: grid;
+    grid-template-columns: 3ch 1fr;
+    gap: var(--s-4);
+    padding: var(--s-5) var(--s-3);
+    border-top: 1px solid var(--line);
+    border-radius: 2px;
+  }
+  .highlights__num { font-size: var(--step-1); color: var(--muted); font-weight: 400; }
+  .highlights__label { display: block; color: var(--sea); margin-bottom: var(--s-1); }
+  .highlights__title {
+    font-family: var(--font-body);
+    font-size: var(--step-1);
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  .highlights__text { margin-top: var(--s-2); color: var(--ink); }
+  .highlights__item.is-active { background: var(--surface-2); }
+  .highlights__item.is-active .highlights__num { color: var(--buoy-ink); font-weight: 600; }
+</style>

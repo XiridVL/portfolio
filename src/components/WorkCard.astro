@@ -1,0 +1,129 @@
+---
+/**
+ * Project card for the home Work grid (spec §3.3). The H3 link is stretched
+ * over the whole card; external links sit above it (position: relative; z-index: 1).
+ * The mockup is picked from the slug unless you pass one in the default slot.
+ *
+ *   {projectCards(locale).map((p) => <WorkCard {...p} locale={locale} />)}
+ */
+import StatusChip from './StatusChip.astro';
+import SpecRows from './SpecRows.astro';
+import ExternalLink from './ExternalLink.astro';
+import MockupVstats from './mockups/MockupVstats.astro';
+import MockupDesktop from './mockups/MockupDesktop.astro';
+import MockupTeams from './mockups/MockupTeams.astro';
+import MockupIvpiter from './mockups/MockupIvpiter.astro';
+import { transitionNames, type ChipData, type ExternalLinkData, type ProjectSlug, type SpecRow } from '../data/projects';
+import { useStrings, type Locale } from '../i18n';
+
+interface Props {
+  slug: ProjectSlug;
+  locale: Locale;
+  chips: ChipData[];
+  title: string;
+  oneLiner: string;
+  specRows: SpecRow[];
+  external: ExternalLinkData[];
+  /** Base-aware case-study href (projectCards() provides it). */
+  href: string;
+  headingLevel?: 'h3' | 'h2';
+  class?: string;
+}
+
+const { slug, locale, chips, title, oneLiner, specRows, external, href, headingLevel = 'h3', class: className } =
+  Astro.props;
+const t = useStrings(locale);
+const vt = transitionNames(slug);
+const Heading = headingLevel;
+const mockups = {
+  vstats: MockupVstats,
+  'vstats-desktop': MockupDesktop,
+  'vstats-teams': MockupTeams,
+  ivpiter: MockupIvpiter,
+} as const;
+const Mockup = mockups[slug];
+---
+
+<article class:list={['work-card', className]}>
+  <div class="work-card__mockup" style={`view-transition-name: ${vt.mock}`}>
+    {Astro.slots.has('default') ? <slot /> : <Mockup locale={locale} />}
+  </div>
+  <div class="work-card__body">
+    <ul class="work-card__chips" role="list">
+      {chips.map((chip) => <li><StatusChip kind={chip.kind} text={chip.text} /></li>)}
+    </ul>
+    <Heading class="work-card__title h3" style={`view-transition-name: ${vt.title}`}>
+      <a href={href} class="work-card__link">{title}</a>
+    </Heading>
+    <p class="work-card__text">{oneLiner}</p>
+    <SpecRows rows={specRows} size="sm" locale={locale} class="work-card__spec" />
+    <p class="work-card__links">
+      <span class="work-card__more" aria-hidden="true">{t.work.readCase} <span class="work-card__arrow">→</span></span>
+      {
+        external.map((link) => (
+          <ExternalLink href={link.href} locale={locale} class="work-card__ext">
+            {link.label}
+          </ExternalLink>
+        ))
+      }
+    </p>
+  </div>
+</article>
+
+<style>
+  .work-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-card);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  /* Top horizon rule: extends to full width in buoy on hover/focus. */
+  .work-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    width: 25%;
+    border-top: 1.5px solid var(--horizon);
+    transition: width var(--dur-2) var(--ease-tide), border-color var(--dur-2) ease;
+  }
+  .work-card:hover::before,
+  .work-card:focus-within::before { width: 100%; border-color: var(--buoy); }
+
+  .work-card__mockup {
+    padding: var(--s-5);
+    background: var(--surface-2);
+    transition: transform var(--dur-2) var(--ease-tide);
+  }
+  .work-card__mockup > :global(*) { transition: transform var(--dur-2) var(--ease-tide); }
+  .work-card:hover .work-card__mockup > :global(*),
+  .work-card:focus-within .work-card__mockup > :global(*) { transform: translateY(-4px); }
+
+  .work-card__body { display: flex; flex-direction: column; gap: var(--s-4); padding: var(--s-5); flex: 1; }
+  .work-card__chips { display: flex; flex-wrap: wrap; gap: var(--s-2); list-style: none; padding: 0; }
+  .work-card__title { font-size: var(--step-2); }
+  .work-card__link { color: var(--ink); text-decoration: none; }
+  .work-card__link::after { content: ""; position: absolute; inset: 0; z-index: 0; }
+  .work-card__link:hover { color: var(--ink); }
+  .work-card__link:focus-visible { outline: none; }
+  .work-card:has(.work-card__link:focus-visible) { outline: 2px solid var(--sea-strong); outline-offset: 3px; }
+  .work-card__text { color: var(--ink); }
+  .work-card__links { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-5); margin-top: auto; }
+  .work-card__more { color: var(--sea); font-weight: 600; }
+  .work-card__arrow { display: inline-block; transition: transform var(--dur-2) var(--ease-tide); }
+  .work-card:hover .work-card__arrow, .work-card:focus-within .work-card__arrow { transform: translateX(4px); }
+  .work-card__links :global(.work-card__ext) {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+  }
+</style>

@@ -1,0 +1,79 @@
+---
+import BaseLayout from '../components/BaseLayout.astro';
+import ExternalLink from '../components/ExternalLink.astro';
+import { pageMeta } from '../data/meta';
+import { site } from '../data/site';
+
+const meta = pageMeta.privacy.en;
+const mailto = `mailto:${site.email}`;
+// P.IVA and business address come from site config; empty values are skipped.
+const legal = [site.vatNumber && `P.IVA ${site.vatNumber}.`, site.businessAddress && `${site.businessAddress}.`]
+  .filter(Boolean)
+  .join(' ');
+const githubPrivacy = 'https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement';
+---
+
+<BaseLayout title={meta.title} description={meta.description} locale="en" routeKey="privacy">
+  <article class="privacy section container container--reading">
+    <header class="privacy__header">
+      <h1>Privacy</h1>
+      <p class="eyebrow">Last updated: <time datetime="2026-10">October 2026</time></p>
+    </header>
+
+    <div class="prose">
+      <h2>Who is responsible</h2>
+      <p>
+        Andrea Capelli, freelance web developer, Rimini, Italy. Contact: <a href={mailto}>{site.email}</a>.
+        {legal}
+      </p>
+
+      <h2>No cookies, no tracking</h2>
+      <p>
+        This site sets no cookies and loads no analytics, advertising or third-party scripts. Fonts and graphics are
+        served from this site itself.
+      </p>
+
+      <h2>Preferences on your device</h2>
+      <p>
+        If you choose a theme or language, that choice is saved in your browser's local storage so the site remembers
+        it. It never leaves your device, and you can clear it in your browser settings.
+      </p>
+
+      <h2>Hosting</h2>
+      <p>
+        This site is hosted on GitHub Pages. GitHub may process technical data such as your IP address to deliver the
+        site and keep it secure. See <ExternalLink href={githubPrivacy} locale="en">GitHub's privacy statement</ExternalLink>.
+      </p>
+
+      <h2>When you email me</h2>
+      <p>
+        The contact brief only opens your own email app; this site sends and stores nothing. When you email me, I use
+        your name, email address and message only to reply and to discuss your project (legal basis: steps prior to a
+        contract, Art. 6(1)(b) GDPR). Email is handled by my provider, Proton. I keep the conversation for as long as
+        needed to reply and, if we work together, for as long as Italian tax and accounting law requires.
+      </p>
+
+      <h2>Your rights</h2>
+      <p>
+        You can ask to access, correct or delete your data, to restrict or object to its processing, or to receive it
+        in a portable format, by writing to <a href={mailto}>{site.email}</a>. You can also complain to the Italian data
+        protection authority (Garante per la protezione dei dati personali).
+      </p>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .privacy__header {
+    display: grid;
+    gap: var(--s-3);
+    padding-block-end: var(--s-6);
+    margin-block-end: var(--s-6);
+    border-block-end: 1.5px solid var(--horizon);
+  }
+  .privacy .prose h2 {
+    margin-block-start: var(--s-6);
+    font-size: var(--step-2);
+  }
+  .privacy .prose h2:first-child { margin-block-start: 0; }
+</style>

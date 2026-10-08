@@ -1,0 +1,59 @@
+---
+/**
+ * Services and prices (#services, spec §3.4 / §4.4): six package cards
+ * (3×2 from 1240px, 2×3 from 768px), the custom quote panel and the rates band.
+ */
+import SectionHeader from '../SectionHeader.astro';
+import ServiceCard from '../ServiceCard.astro';
+import CustomQuotePanel from './CustomQuotePanel.astro';
+import RatesBand from './RatesBand.astro';
+import { services } from '../../data/services';
+import { homeCopy } from '../../i18n/home';
+import type { Locale } from '../../i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const copy = homeCopy[locale].services;
+---
+
+<section id="services" class="section" aria-labelledby="services-title">
+  <div class="container">
+    <SectionHeader id="services" number={copy.number} label={copy.label} title={copy.title} intro={copy.intro} />
+    <ul class="services-grid" role="list">
+      {
+        services.map((service) => (
+          <li class="services-grid__item">
+            <ServiceCard service={service} locale={locale} />
+          </li>
+        ))
+      }
+    </ul>
+    <div class="services-extra">
+      <CustomQuotePanel locale={locale} />
+      <RatesBand locale={locale} />
+    </div>
+  </div>
+</section>
+
+<style>
+  .services-grid {
+    display: grid;
+    gap: var(--s-5);
+    grid-template-columns: minmax(0, 1fr);
+  }
+  @media (min-width: 768px) {
+    .services-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (min-width: 1240px) {
+    .services-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  .services-grid__item { display: flex; }
+  .services-grid__item > :global(*) { flex: 1; }
+  .services-extra {
+    display: grid;
+    gap: var(--s-7);
+    margin-top: var(--s-7);
+  }
+</style>

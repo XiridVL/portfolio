@@ -1,0 +1,58 @@
+---
+/**
+ * "Doesn't fit a box?" panel (spec §3.4): tinted surface, dashed sea border,
+ * horizon rule on top. The button preselects "custom" in the brief builder.
+ */
+import Button from '../Button.astro';
+import { site } from '../../data/site';
+import { serviceHref, type Locale } from '../../i18n';
+import { homeCopy } from '../../i18n/home';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const copy = homeCopy[locale].services.custom;
+---
+
+<aside class="quote-panel" aria-labelledby="custom-quote-title">
+  <h3 id="custom-quote-title" class="quote-panel__title">{copy.title}</h3>
+  <p class="quote-panel__text measure">{copy.text}</p>
+  <div class="quote-panel__actions">
+    <Button href={serviceHref('custom', locale)} arrow="right" data-service-link="custom">{copy.button}</Button>
+    <p class="quote-panel__email">
+      {copy.orEmail} <a href={`mailto:${site.email}`}>{site.email}</a>
+    </p>
+  </div>
+</aside>
+
+<style>
+  .quote-panel {
+    position: relative;
+    display: grid;
+    gap: var(--s-4);
+    padding: var(--s-6) var(--s-5);
+    background: var(--surface-2);
+    border: 1.5px dashed var(--sea);
+    border-radius: 0 0 var(--r-card) var(--r-card);
+  }
+  .quote-panel::before {
+    content: "";
+    position: absolute;
+    inset: -1.5px -1.5px auto;
+    border-top: 1.5px solid var(--horizon);
+  }
+  @media (min-width: 768px) {
+    .quote-panel { padding: var(--s-7) var(--s-6); }
+  }
+  .quote-panel__title { font-size: var(--step-3); }
+  .quote-panel__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-3) var(--s-5);
+    margin-top: var(--s-2);
+  }
+  .quote-panel__email { color: var(--muted); overflow-wrap: anywhere; }
+  .quote-panel__email a { display: inline-block; padding-block: 10px; }
+</style>

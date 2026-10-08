@@ -1,0 +1,59 @@
+---
+/**
+ * Hero stream panel (spec §10.1): a terminal-style panel, `lobby.ndjson`, with
+ * ten anonymous player rows. Each row starts as a grey skeleton bar and
+ * resolves to a sea bar plus a score pill, in sequence over about 1.6s, once,
+ * on view. Reduced motion or no script: rows render already filled.
+ */
+import Frame from './Frame.astro';
+import type { Locale } from '../../i18n';
+
+interface Props {
+  locale?: Locale;
+  class?: string;
+}
+const { locale, class: className } = Astro.props;
+
+const widths = [168, 214, 132, 236, 190, 150, 222, 120, 204, 176];
+const scores = [61, 74, 58, 82, 69, 77, 55, 88, 64, 71];
+
+// Static parts of a row (skeleton bar, skeleton pill, resolved pill) are drawn
+// once in <defs> and reused; only label, sea bar and score vary per row.
+const defs =
+  '<defs><g id="mks-r"><rect class="k-s2" x="112" y="-5" width="250" height="10" rx="5"/><rect class="k-s2" x="384" y="-10" width="76" height="20" rx="10"/></g><rect id="mks-p" class="k-sf o-by" x="384.5" y="-9.5" width="75" height="19" rx="9.5"/></defs>';
+
+const rows =
+  defs +
+  widths
+    .map((w, i) => {
+      const n = String(i + 1).padStart(2, '0');
+      return `<g style="--i:${i}" transform="translate(0 ${30 + i * 30})"><text x="20" y="4">player ${n}</text><use href="#mks-r"/><rect class="k-sea f" x="112" y="-5" width="${w}" height="10" rx="5"/><g class="p"><use href="#mks-p"/><text class="k-ink mid" x="422" y="4">${scores[i]}</text></g></g>`;
+    })
+    .join('');
+---
+
+<Frame
+  class:list={['mk-stream', className]}
+  variant="terminal"
+  title="lobby.ndjson"
+  ratio="4 / 3"
+  locale={locale}
+  play
+  label="Illustration: ten anonymous player rows filling in one by one as streamed results arrive."
+>
+  <svg viewBox="0 0 480 330" focusable="false" set:html={rows} />
+</Frame>
+
+<style is:global>
+  .mk-stream .f { transform-box: fill-box; transform-origin: 0 50%; }
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+    .mk-stream .f { transform: scaleX(0); }
+    .mk-stream .p { opacity: 0; }
+    .mk-stream.is-playing .f { animation: mk-stream-fill 420ms var(--ease-tide) forwards; }
+    .mk-stream.is-playing .p { animation: mk-stream-pill 240ms ease forwards; }
+    .mk-stream.is-playing .f,
+    .mk-stream.is-playing .p { animation-delay: calc(var(--i) * 130ms); }
+  }
+  @keyframes mk-stream-fill { to { transform: scaleX(1); } }
+  @keyframes mk-stream-pill { to { opacity: 1; } }
+</style>

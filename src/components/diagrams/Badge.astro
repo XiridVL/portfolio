@@ -1,0 +1,15 @@
+---
+/** Numbered step marker, matching the ordered list under the diagram. */
+interface Props {
+  x: number;
+  y: number;
+  n: number;
+  r?: number;
+}
+const { x, y, n, r = 12 } = Astro.props;
+---
+
+<g class="d-badge">
+  <circle cx={x} cy={y} r={r} />
+  <text x={x} y={y} text-anchor="middle" dominant-baseline="central">{n}</text>
+</g>

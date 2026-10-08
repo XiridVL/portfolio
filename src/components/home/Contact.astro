@@ -1,0 +1,64 @@
+---
+/**
+ * Contact (#contact, spec §3.8 / §4.8): brief builder on the left, direct
+ * links (email + copy, GitHub, LinkedIn, location note) on the right.
+ */
+import SectionHeader from '../SectionHeader.astro';
+import CopyEmail from '../CopyEmail.astro';
+import ExternalLink from '../ExternalLink.astro';
+import BriefBuilder from './BriefBuilder.astro';
+import { site } from '../../data/site';
+import { homeCopy } from '../../i18n/home';
+import type { Locale } from '../../i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const copy = homeCopy[locale].contact;
+---
+
+<section id="contact" class="section" aria-labelledby="contact-title">
+  <div class="container">
+    <SectionHeader id="contact" number={copy.number} label={copy.label} title={copy.title} intro={copy.intro} />
+    <div class="contact">
+      <div class="contact__form">
+        <BriefBuilder locale={locale} />
+      </div>
+      <div class="contact__direct">
+        <CopyEmail locale={locale} />
+        <p class="contact__links">
+          <ExternalLink href={site.github} locale={locale} class="contact__link">GitHub</ExternalLink>
+          <span aria-hidden="true">·</span>
+          <ExternalLink href={site.linkedin} locale={locale} class="contact__link">LinkedIn</ExternalLink>
+        </p>
+        <p class="contact__note">{copy.note}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .contact {
+    display: grid;
+    gap: var(--s-8);
+    grid-template-columns: minmax(0, 1fr);
+  }
+  @media (min-width: 960px) {
+    .contact { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--s-8); align-items: start; }
+  }
+  .contact__form { min-width: 0; }
+  .contact__direct {
+    display: grid;
+    gap: var(--s-4);
+    min-width: 0;
+    padding-top: var(--s-5);
+    border-top: 1.5px solid var(--horizon);
+  }
+  @media (min-width: 960px) {
+    .contact__direct { position: sticky; top: calc(var(--header-h-compact, 56px) + var(--s-6)); }
+  }
+  .contact__links { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--s-3); color: var(--muted); }
+  .contact__links :global(.contact__link) { display: inline-flex; align-items: center; min-height: 44px; }
+  .contact__note { color: var(--muted); font-size: var(--step--1); }
+</style>

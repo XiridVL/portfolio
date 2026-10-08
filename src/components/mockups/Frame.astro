@@ -1,0 +1,104 @@
+---
+/**
+ * Window frame shared by the mockups (spec §10): surface body, surface-2 title
+ * bar, three dots, radius --r-frame. The root is the labelled image
+ * (role="img" + aria-label); everything inside is hidden from assistive tech.
+ *
+ * The SVG drawing goes in the default slot. Drawings use the short utility
+ * classes below (k-* fills, o-* outlines) so they follow the theme tokens.
+ * `play` marks the frame for its once-on-view micro-state (spec §12.4).
+ */
+import type { Locale } from '../../i18n';
+
+interface Props {
+  label: string;
+  /** Title bar text (window title, address bar or file name). */
+  title?: string;
+  variant?: 'window' | 'browser' | 'terminal';
+  /** CSS aspect-ratio of the whole frame. */
+  ratio?: string;
+  locale?: Locale;
+  play?: boolean;
+  class?: string;
+}
+
+const { label, title, variant = 'window', ratio = '16 / 10', locale, play = false, class: className } = Astro.props;
+---
+
+<div
+  class:list={['mk', 'frame', `mk--${variant}`, className]}
+  role="img"
+  aria-label={label}
+  lang={locale === 'it' ? 'en' : undefined}
+  data-play={play ? '' : undefined}
+  style={`aspect-ratio: ${ratio}`}
+>
+  <div class="frame__bar mk__bar" aria-hidden="true">
+    <span class="frame__dot"></span><span class="frame__dot"></span><span class="frame__dot"></span>
+    {title && <span class="mk__title">{title}</span>}
+  </div>
+  <div class="mk__body" aria-hidden="true"><slot /></div>
+</div>
+
+<script>
+  import './play';
+</script>
+
+<style is:global>
+  .mk {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    box-shadow: var(--shadow);
+    container-type: inline-size;
+  }
+  .mk__bar { flex: none; }
+  .mk__title {
+    min-width: 0;
+    margin-inline-start: 8px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .mk--browser .mk__title {
+    flex: 1;
+    max-width: 22em;
+    margin-inline: 12px auto;
+    padding: 1px 10px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-pill);
+    line-height: 18px;
+    color: var(--ink);
+  }
+  .mk--window .mk__title { margin-inline: auto; padding-inline-end: 44px; }
+  .mk--terminal .mk__bar { background: var(--surface-2); }
+
+  .mk__body {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+  }
+  .mk__body > svg { width: 100%; height: 100%; }
+
+  /* Drawing vocabulary: token colours only, so both themes work. */
+  .mk text { font-family: var(--font-mono); font-size: 12px; fill: var(--muted); }
+  /* o-* outlines come first so a k-* fill on the same element wins. */
+  .mk .o-ln { fill: none; stroke: var(--line); }
+  .mk .o-ls { fill: none; stroke: var(--line-strong); }
+  .mk .o-sea { fill: none; stroke: var(--sea); }
+  .mk .o-by { fill: none; stroke: var(--buoy); }
+  .mk .k-sea { fill: var(--sea); }
+  .mk .k-s2 { fill: var(--surface-2); }
+  .mk .k-sf { fill: var(--surface); }
+  .mk .k-ink { fill: var(--ink); }
+  .mk .k-ls { fill: var(--line-strong); }
+  .mk .k-on { fill: var(--on-sea); }
+  .mk .mid { text-anchor: middle; }
+  .mk .end { text-anchor: end; }
+  /* The 640-unit card drawings: below ~530px wide their 12-unit labels would
+     render under 10px, so show the shapes only (the frame keeps its aria-label). */
+  @container (max-width: 529px) {
+    .mk:not(.mk-stream) .mk__body text { display: none; }
+  }
+</style>

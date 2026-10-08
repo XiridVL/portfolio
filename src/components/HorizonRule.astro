@@ -1,0 +1,44 @@
+---
+/**
+ * Section divider (spec §8.5): full-width 1.5px horizon rule with an 8px buoy
+ * dot at its left end, beside the mono section label ("01 — WORK").
+ * Without `label`/`number` it renders just the rule and dot.
+ */
+interface Props {
+  /** Label text, e.g. "WORK" or "LAVORI". */
+  label?: string;
+  /** Section number, e.g. "01". */
+  number?: string;
+  class?: string;
+}
+const { label, number, class: className } = Astro.props;
+const text = [number, label].filter(Boolean).join(' — ');
+---
+
+<div class:list={['horizon-rule', className]}>
+  <span class="horizon-rule__line" aria-hidden="true"></span>
+  <span class="horizon-rule__head">
+    <span class="buoy-dot" aria-hidden="true"></span>
+    {text && <span class="horizon-rule__label label">{text}</span>}
+  </span>
+</div>
+
+<style>
+  .horizon-rule { position: relative; padding-top: var(--s-3); }
+  .horizon-rule__line {
+    position: absolute;
+    inset: 0 0 auto 0;
+    border-top: 1.5px solid var(--horizon);
+  }
+  .horizon-rule__head {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+  }
+  .horizon-rule__head .buoy-dot {
+    position: absolute;
+    left: 0;
+    top: -3.25px; /* centre the 8px dot on the 1.5px line */
+  }
+  .horizon-rule__label { color: var(--ink); }
+</style>

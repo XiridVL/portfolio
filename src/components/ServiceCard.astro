@@ -1,0 +1,100 @@
+---
+/**
+ * Service package card (spec §3.4). Data comes from src/data/services.ts:
+ *
+ *   {services.map((s) => <ServiceCard service={s} locale={locale} />)}
+ *
+ * Actions: "Ask about this →" → /?service=<id>#contact, and the small
+ * "or get a custom quote" → /?service=custom#contact (both locale-aware).
+ */
+import PriceTag from './PriceTag.astro';
+import type { Service } from '../data/services';
+import { localeHref, serviceHref, useStrings, type Locale } from '../i18n';
+
+interface Props {
+  service: Service;
+  locale: Locale;
+  class?: string;
+}
+const { service, locale, class: className } = Astro.props;
+const t = useStrings(locale).services;
+const copy = service.content[locale];
+const headingId = `service-${service.id}-title`;
+---
+
+<article class:list={['service-card', className]} id={`service-${service.id}`} aria-labelledby={headingId}>
+  <div class="service-card__head">
+    <span class="service-card__letter mono" aria-hidden="true">{service.letter}</span>
+    <h3 id={headingId} class="service-card__title"><span class="visually-hidden">{service.letter}. </span>{copy.name}</h3>
+  </div>
+  <PriceTag amount={service.priceFrom} per={service.per} locale={locale} class="service-card__price" />
+  <p class="service-card__duration label">{copy.duration}</p>
+  <ul class="service-card__bullets buoy-list">
+    {copy.bullets.map((b) => <li>{b}</li>)}
+  </ul>
+  {
+    copy.proven.length > 0 && (
+      <p class="service-card__proven">
+        <em>{t.proven}</em>{' '}
+        {copy.proven.map((p, i) => (
+          <>
+            {i > 0 && <span aria-hidden="true"> · </span>}
+            <a href={localeHref(p.route, locale)}>{p.label}</a>
+          </>
+        ))}
+      </p>
+    )
+  }
+  <div class="service-card__actions">
+    <a class="service-card__ask" href={serviceHref(service.id, locale)} data-service-link={service.id}>
+      {t.ask}{' '}<span class="service-card__arrow" aria-hidden="true">→</span>
+    </a>
+    <a class="service-card__custom" href={serviceHref('custom', locale)} data-service-link="custom">{t.custom}</a>
+  </div>
+</article>
+
+<style>
+  .service-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+    padding: var(--s-5);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-top: 1.5px solid var(--horizon);
+    border-radius: 0 0 var(--r-card) var(--r-card);
+    box-shadow: var(--shadow);
+    transition: transform var(--dur-2) var(--ease-tide), border-color var(--dur-2) ease;
+  }
+  .service-card:hover,
+  .service-card:focus-within { transform: translateY(-2px); border-color: var(--sea); }
+  .service-card__head { display: flex; align-items: baseline; gap: var(--s-3); }
+  .service-card__letter {
+    display: inline-grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    flex: none;
+    border: 1.5px solid var(--sea);
+    border-radius: var(--r-chip);
+    color: var(--sea);
+    font-weight: 400;
+  }
+  .service-card__title { font-size: var(--step-2); }
+  .service-card__duration { color: var(--muted); }
+  .service-card__proven { font-size: var(--step--1); color: var(--muted); }
+  .service-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-1) var(--s-4);
+    margin-top: auto;
+    padding-top: var(--s-3);
+    border-top: 1px solid var(--line);
+  }
+  .service-card__ask, .service-card__custom { display: inline-flex; align-items: center; min-height: 44px; }
+  .service-card__ask { font-weight: 600; column-gap: 0.35em; }
+  .service-card__custom { font-size: var(--step--1); }
+  .service-card__arrow { display: inline-block; transition: transform var(--dur-2) var(--ease-tide); }
+  .service-card__ask:hover .service-card__arrow { transform: translateX(4px); }
+</style>

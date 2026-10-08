@@ -1,0 +1,48 @@
+---
+/**
+ * Locale-aware price: "from €1,200 + VAT where due" / "da €1.200 + IVA se dovuta".
+ * The VAT suffix follows `site.vatApplies`. Prices never animate.
+ */
+import { site } from '../data/site';
+import { formatPrice } from '../lib/format';
+import { useStrings, type Locale } from '../i18n';
+
+interface Props {
+  amount: number;
+  locale: Locale;
+  /** Recurring price: renders "/month" / "/mese". */
+  per?: 'month';
+  /** Prefix with "from" / "da" (default true). */
+  from?: boolean;
+  size?: 'md' | 'lg';
+  class?: string;
+}
+const { amount, locale, per, from = true, size = 'lg', class: className } = Astro.props;
+const t = useStrings(locale).price;
+---
+
+<p class:list={['price-tag', `price-tag--${size}`, className]}>
+  <span class="price-tag__value">
+    {from && <span class="price-tag__from">{t.from} </span>}<span class="price-tag__amount">{formatPrice(amount, locale)}</span>{per === 'month' && <span class="price-tag__per">{t.perMonth}</span>}
+  </span>
+  {site.vatApplies && <span class="price-tag__vat">{t.vatSuffix}</span>}
+</p>
+
+<style>
+  .price-tag {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 var(--s-2);
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    container-type: inline-size;
+  }
+  .price-tag__from, .price-tag__per { font-size: var(--step-0); color: var(--muted); }
+  .price-tag__amount { font-weight: 400; letter-spacing: -0.02em; }
+  /* Scales with the card so the VAT suffix stays beside the price in narrow columns. */
+  .price-tag--lg .price-tag__amount { font-size: min(var(--step-5), 10cqi); line-height: 1; }
+  .price-tag--md .price-tag__amount { font-size: var(--step-2); }
+  .price-tag__vat { font-size: var(--step--1); color: var(--muted); white-space: nowrap; }
+</style>

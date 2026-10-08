@@ -1,0 +1,80 @@
+---
+import BaseLayout from '../../components/BaseLayout.astro';
+import ExternalLink from '../../components/ExternalLink.astro';
+import { pageMeta } from '../../data/meta';
+import { site } from '../../data/site';
+
+const meta = pageMeta.privacy.it;
+const mailto = `mailto:${site.email}`;
+// P.IVA e indirizzo dalla configurazione del sito; i valori vuoti vengono omessi.
+const legal = [site.vatNumber && `P.IVA ${site.vatNumber}.`, site.businessAddress && `${site.businessAddress}.`]
+  .filter(Boolean)
+  .join(' ');
+const githubPrivacy = 'https://docs.github.com/it/site-policy/privacy-policies/github-general-privacy-statement';
+---
+
+<BaseLayout title={meta.title} description={meta.description} locale="it" routeKey="privacy">
+  <article class="privacy section container container--reading">
+    <header class="privacy__header">
+      <h1>Privacy</h1>
+      <p class="eyebrow">Ultimo aggiornamento: <time datetime="2026-10">ottobre 2026</time></p>
+    </header>
+
+    <div class="prose">
+      <h2>Titolare del trattamento</h2>
+      <p>
+        Andrea Capelli, sviluppatore web freelance, Rimini, Italia. Contatto: <a href={mailto}>{site.email}</a>.
+        {legal}
+      </p>
+
+      <h2>Nessun cookie, nessun tracciamento</h2>
+      <p>
+        Questo sito non imposta cookie e non carica script di analisi, pubblicità o di terze parti. Font e grafica sono
+        serviti dal sito stesso.
+      </p>
+
+      <h2>Preferenze sul tuo dispositivo</h2>
+      <p>
+        Se scegli un tema o una lingua, la scelta viene salvata nella memoria locale del browser perché il sito la
+        ricordi. Non lascia mai il tuo dispositivo e puoi cancellarla dalle impostazioni del browser.
+      </p>
+
+      <h2>Hosting</h2>
+      <p>
+        Il sito è ospitato su GitHub Pages. GitHub può trattare dati tecnici come l'indirizzo IP per erogare il sito e
+        mantenerlo sicuro. Vedi <ExternalLink href={githubPrivacy} locale="it">l'informativa privacy di GitHub</ExternalLink>.
+      </p>
+
+      <h2>Quando mi scrivi</h2>
+      <p>
+        Il modulo di contatto apre solo il tuo programma di posta: questo sito non invia né salva nulla. Quando mi
+        scrivi, uso nome, indirizzo email e messaggio solo per risponderti e parlare del progetto (base giuridica:
+        misure precontrattuali, art. 6(1)(b) GDPR). La posta è gestita dal mio fornitore, Proton. Conservo la
+        conversazione per il tempo necessario a rispondere e, se lavoriamo insieme, per il tempo richiesto dalla
+        normativa fiscale e contabile italiana.
+      </p>
+
+      <h2>I tuoi diritti</h2>
+      <p>
+        Puoi chiedere accesso, rettifica o cancellazione dei dati, limitazione od opposizione al trattamento, o la
+        portabilità, scrivendo a <a href={mailto}>{site.email}</a>. Puoi anche presentare reclamo al Garante per la
+        protezione dei dati personali.
+      </p>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .privacy__header {
+    display: grid;
+    gap: var(--s-3);
+    padding-block-end: var(--s-6);
+    margin-block-end: var(--s-6);
+    border-block-end: 1.5px solid var(--horizon);
+  }
+  .privacy .prose h2 {
+    margin-block-start: var(--s-6);
+    font-size: var(--step-2);
+  }
+  .privacy .prose h2:first-child { margin-block-start: 0; }
+</style>

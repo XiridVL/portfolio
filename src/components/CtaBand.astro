@@ -1,0 +1,50 @@
+---
+/**
+ * Closing CTA band on case studies (spec §5.13):
+ *   EN "Need something like this? Get a free quote." + [Get a free quote →]
+ *   IT "Ti serve qualcosa di simile? Chiedi un preventivo gratuito." + [Preventivo gratuito →]
+ * Override `text` / `button` / `href` for other pages.
+ */
+import Button from './Button.astro';
+import { sectionHref, useStrings, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+  text?: string;
+  button?: string;
+  href?: string;
+  class?: string;
+}
+const { locale, text, button, href, class: className } = Astro.props;
+const t = useStrings(locale).caseStudy;
+---
+
+<section class:list={['cta-band', className]} aria-label={button ?? t.ctaButton}>
+  <div class="container cta-band__inner">
+    <p class="cta-band__text">{text ?? t.ctaText}</p>
+    <Button href={href ?? sectionHref('contact', locale, false)} size="lg" arrow="right">{button ?? t.ctaButton}</Button>
+  </div>
+</section>
+
+<style>
+  .cta-band {
+    background: var(--surface-2);
+    border-top: 1.5px solid var(--horizon);
+    padding-block: var(--s-8);
+  }
+  .cta-band__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-5);
+  }
+  .cta-band__text {
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    font-weight: 650;
+    line-height: 1.2;
+    max-width: 28ch;
+    text-wrap: balance;
+  }
+</style>

@@ -1,0 +1,22 @@
+---
+/** Free-standing diagram text with a halo, so it stays legible where it crosses a line. */
+interface Props {
+  x: number;
+  y: number;
+  text: string | string[];
+  anchor?: 'start' | 'middle' | 'end';
+  muted?: boolean;
+}
+const { x, y, text, anchor = 'middle', muted = false } = Astro.props;
+const lines = Array.isArray(text) ? text : [text];
+---
+
+<text
+  class:list={['d-label', 'd-label--halo', { 'd-muted': muted }]}
+  x={x}
+  y={y}
+  text-anchor={anchor}
+  dominant-baseline="central"
+>
+  {lines.map((line, i) => <tspan x={x} dy={i === 0 ? 0 : '1.25em'}>{line}</tspan>)}
+</text>

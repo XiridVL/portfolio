@@ -1,0 +1,135 @@
+---
+/**
+ * About (#about, spec §3.6 / §4.6): outline monogram over static contours,
+ * three paragraphs, the facts list and the tools table.
+ */
+import SectionHeader from '../SectionHeader.astro';
+import Monogram from '../Monogram.astro';
+import Contours from '../Contours.astro';
+import ExternalLink from '../ExternalLink.astro';
+import { site } from '../../data/site';
+import { homeCopy } from '../../i18n/home';
+import type { Locale } from '../../i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const copy = homeCopy[locale].about;
+---
+
+<section id="about" class="section section--deferred" aria-labelledby="about-title">
+  <div class="container">
+    <SectionHeader id="about" number={copy.number} label={copy.label} title={copy.title} />
+    <div class="about">
+      <div class="about__visual" aria-hidden="true">
+        <Contours class="about__contours" width={480} height={480} levels={7} points={14} seed="rimini-about" />
+        <Monogram variant="outline" size={240} class="about__mark" />
+      </div>
+      <div class="about__body">
+        <div class="about__text stack">
+          {copy.paragraphs.map((p) => <p>{p}</p>)}
+        </div>
+        <dl class="about__facts">
+          {
+            copy.facts.map((fact) => (
+              <div class="about__fact">
+                <dt class="label">{fact.label}</dt>
+                <dd>{fact.value}</dd>
+              </div>
+            ))
+          }
+          <div class="about__fact">
+            <dt class="label">{copy.linksLabel}</dt>
+            <dd>
+              <ExternalLink href={site.github} locale={locale} class="about__link">GitHub</ExternalLink>
+              <span aria-hidden="true"> · </span>
+              <ExternalLink href={site.linkedin} locale={locale} class="about__link">LinkedIn</ExternalLink>
+            </dd>
+          </div>
+        </dl>
+        <div class="about__tools">
+          <h3 class="about__tools-title label">{copy.toolsTitle}</h3>
+          <dl class="about__tools-list">
+            {
+              copy.tools.map((row) => (
+                <div class="about__tool">
+                  <dt>{row.area}</dt>
+                  <dd>{row.items}</dd>
+                </div>
+              ))
+            }
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .about {
+    display: grid;
+    gap: var(--s-7);
+    grid-template-columns: minmax(0, 1fr);
+  }
+  @media (min-width: 960px) {
+    .about { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: var(--s-8); align-items: start; }
+  }
+
+  /* Single column: the illustration follows the text and stays small. */
+  .about__visual {
+    order: 2;
+    justify-self: center;
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: min(100%, 200px);
+    aspect-ratio: 1;
+    color: var(--ink);
+  }
+  @media (min-width: 960px) {
+    .about__visual { order: 0; justify-self: start; width: min(100%, 360px); }
+  }
+  .about__visual :global(.about__contours) { position: absolute; inset: 0; }
+  .about__visual :global(.about__mark) { position: relative; width: min(240px, 66%); height: auto; }
+
+  .about__body { display: grid; gap: var(--s-7); min-width: 0; }
+  .about__text { max-width: var(--measure); }
+  .about__text p:first-child { font-size: var(--step-1); }
+
+  .about__facts {
+    display: grid;
+    gap: 0;
+    max-width: var(--measure);
+    border-top: 1.5px solid var(--horizon);
+  }
+  .about__fact {
+    display: grid;
+    gap: var(--s-1) var(--s-5);
+    grid-template-columns: minmax(0, 1fr);
+    padding-block: var(--s-3);
+    border-bottom: 1px solid var(--line);
+  }
+  @media (min-width: 640px) {
+    .about__fact { grid-template-columns: 11rem minmax(0, 1fr); align-items: baseline; }
+  }
+  .about__fact dt { color: var(--muted); }
+  .about__fact :global(.about__link) { display: inline-flex; align-items: center; min-height: 44px; }
+  .about__fact:last-child { padding-block: var(--s-1); }
+
+  .about__tools { max-width: var(--measure); }
+  .about__tools-title { color: var(--muted); margin-bottom: var(--s-4); }
+  .about__tools-list {
+    display: grid;
+    gap: var(--s-4) var(--s-6);
+    grid-template-columns: minmax(0, 1fr);
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+  }
+  @media (min-width: 768px) {
+    .about__tools-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  .about__tool { display: grid; gap: var(--s-1); padding-top: var(--s-3); border-top: 1px solid var(--line); }
+  .about__tool dt { font-weight: 400; color: var(--ink); }
+  .about__tool dd { color: var(--muted); }
+</style>

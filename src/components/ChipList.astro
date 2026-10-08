@@ -1,0 +1,20 @@
+---
+/** A wrapping list of tech chips (case-study Stack, home tech line). */
+import Chip from './Chip.astro';
+
+interface Props {
+  items: string[];
+  /** Accessible name for the list, if it has no visible heading nearby. */
+  label?: string;
+  class?: string;
+}
+const { items, label, class: className } = Astro.props;
+---
+
+<ul class:list={['chip-list', className]} role="list" aria-label={label}>
+  {items.map((item) => <li><Chip text={item} /></li>)}
+</ul>
+
+<style>
+  .chip-list { display: flex; flex-wrap: wrap; gap: var(--s-2); list-style: none; padding: 0; margin: 0; }
+</style>

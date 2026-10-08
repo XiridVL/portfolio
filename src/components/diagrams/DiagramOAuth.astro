@@ -1,0 +1,130 @@
+---
+/**
+ * 11.4 OAuth (IVPITER): three lanes (player, community site, vStats Connect)
+ * for the authorization code flow with PKCE and pairwise identifiers.
+ */
+import DiagramFrame from './DiagramFrame.astro';
+import Arrow from './Arrow.astro';
+import Box from './Box.astro';
+import Badge from './Badge.astro';
+import Label from './Label.astro';
+
+const steps = [
+  'The player clicks "Link game account" on the community site.',
+  'The site sends them to vStats Connect with a PKCE challenge.',
+  'The player approves; vStats Connect returns a single-use code.',
+  'The site exchanges the code and its PKCE verifier on the server.',
+  "vStats Connect returns a pairwise identifier and verified account data, never the player's email or internal ID.",
+];
+
+const note = 'no email, no internal ID';
+
+/* wide */
+const wx = { player: 120, site: 450, connect: 780 } as const;
+const wHeads = [
+  { x: wx.player, label: 'Player' },
+  { x: wx.site, label: 'Community site' },
+  { x: wx.connect, label: 'vStats Connect' },
+];
+const wNoteHalf = (note.length * 9.6) / 2;
+
+/* tall */
+const tx = { player: 70, site: 180, connect: 290 } as const;
+const tHeads: { x: number; label: string | string[] }[] = [
+  { x: tx.player, label: 'Player' },
+  { x: tx.site, label: ['Community', 'site'] },
+  { x: tx.connect, label: ['vStats', 'Connect'] },
+];
+const tNoteHalf = (note.length * 7.8) / 2;
+---
+
+<DiagramFrame
+  id="diagram-oauth"
+  title="Linking a game account through vStats Connect"
+  desc="Sequence between the player, the community site and vStats Connect: authorize with a PKCE challenge, player consent, a single-use code, a server-side exchange with the verifier, and a pairwise ID with verified account data in return, with no email and no internal ID. The list below describes each step."
+  steps={steps}
+  wideViewBox="-4 -4 908 444"
+  tallViewBox="-2 -2 344 460"
+>
+  <Fragment slot="wide">
+    {
+      wHeads.map((h) => (
+        <>
+          <Box x={h.x - 100} y={0} w={200} h={48} label={h.label} />
+          <path class="d-rule d-rule--dashed" d={`M${h.x},48 L${h.x},400`} />
+        </>
+      ))
+    }
+
+    <g class="d-step" data-step="1">
+      <Badge x={24} y={100} n={1} />
+      <Arrow from={[wx.player, 100]} to={[wx.site, 100]} />
+      <Label x={285} y={82} text="Link game account" />
+    </g>
+    <g class="d-step" data-step="2">
+      <Badge x={24} y={160} n={2} />
+      <Arrow from={[wx.site, 160]} to={[wx.connect, 160]} />
+      <Label x={615} y={142} text="authorize + PKCE challenge" />
+    </g>
+    <g class="d-step" data-step="3">
+      <Badge x={24} y={245} n={3} />
+      <Arrow from={[wx.player, 220]} to={[wx.connect, 220]} />
+      <Label x={285} y={202} text="consent" />
+      <Arrow from={[wx.connect, 270]} to={[wx.site, 270]} />
+      <Label x={615} y={252} text="single-use code" />
+    </g>
+    <g class="d-step" data-step="4">
+      <Badge x={24} y={330} n={4} />
+      <Arrow from={[wx.site, 330]} to={[wx.connect, 330]} />
+      <Label x={615} y={312} text="server exchange + verifier" />
+    </g>
+    <g class="d-step" data-step="5">
+      <Badge x={24} y={390} n={5} />
+      <Arrow from={[wx.connect, 390]} to={[wx.site, 390]} />
+      <Label x={615} y={372} text="pairwise ID + verified account" />
+      <Label x={615} y={420} text={note} muted />
+      <path class="d-strike" d={`M${615 - wNoteHalf - 4},420 L${615 + wNoteHalf + 4},420`} />
+    </g>
+  </Fragment>
+
+  <Fragment slot="tall">
+    {
+      tHeads.map((h) => (
+        <>
+          <Box x={h.x - 48} y={0} w={96} h={44} label={h.label} />
+          <path class="d-rule d-rule--dashed" d={`M${h.x},44 L${h.x},425`} />
+        </>
+      ))
+    }
+
+    <g class="d-step" data-step="1">
+      <Badge x={10} y={90} n={1} r={10} />
+      <Arrow from={[tx.player, 90]} to={[tx.site, 90]} />
+      <Label x={125} y={74} text="Link game account" />
+    </g>
+    <g class="d-step" data-step="2">
+      <Badge x={10} y={160} n={2} r={10} />
+      <Arrow from={[tx.site, 160]} to={[tx.connect, 160]} />
+      <Label x={235} y={124} text={['authorize +', 'PKCE challenge']} />
+    </g>
+    <g class="d-step" data-step="3">
+      <Badge x={10} y={245} n={3} r={10} />
+      <Arrow from={[tx.player, 215]} to={[tx.connect, 215]} />
+      <Label x={125} y={200} text="consent" />
+      <Arrow from={[tx.connect, 275]} to={[tx.site, 275]} />
+      <Label x={235} y={259} text="single-use code" />
+    </g>
+    <g class="d-step" data-step="4">
+      <Badge x={10} y={345} n={4} r={10} />
+      <Arrow from={[tx.site, 345]} to={[tx.connect, 345]} />
+      <Label x={235} y={309} text={['server exchange', '+ verifier']} />
+    </g>
+    <g class="d-step" data-step="5">
+      <Badge x={10} y={415} n={5} r={10} />
+      <Arrow from={[tx.connect, 415]} to={[tx.site, 415]} />
+      <Label x={235} y={379} text={['pairwise ID +', 'verified account']} />
+      <Label x={235} y={442} text={note} muted />
+      <path class="d-strike" d={`M${235 - tNoteHalf - 3},442 L${235 + tNoteHalf + 3},442`} />
+    </g>
+  </Fragment>
+</DiagramFrame>

@@ -1,0 +1,198 @@
+---
+/**
+ * Mobile navigation (<960px): a trigger button plus a modal <dialog> sheet.
+ * Focus is trapped inside while open, Esc closes it (native), and focus
+ * returns to the trigger on close. Following a link closes the sheet.
+ * Rendered by Header; not meant to be used directly.
+ */
+import LangSwitch from './LangSwitch.astro';
+import ThemeToggle from './ThemeToggle.astro';
+import Button from './Button.astro';
+import { useStrings, type Locale, type RouteKey } from '../i18n';
+
+interface Props {
+  locale: Locale;
+  routeKey?: RouteKey;
+  items: Array<{ anchor: string; label: string; href: string }>;
+  ctaHref: string;
+}
+const { locale, routeKey, items, ctaHref } = Astro.props;
+const t = useStrings(locale);
+---
+
+<button
+  type="button"
+  class="mobile-menu__trigger"
+  data-menu-open
+  aria-haspopup="dialog"
+  aria-expanded="false"
+  aria-controls="mobile-menu"
+>
+  <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+    <path d="M2 6h16M2 14h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+  </svg>
+  <span class="mobile-menu__trigger-text">{t.header.menuOpen}</span>
+</button>
+
+<dialog id="mobile-menu" class="mobile-menu" aria-label={t.header.menuOpen} data-menu>
+  <div class="mobile-menu__top">
+    <span class="label muted">{t.header.wordmark}</span>
+    <button type="button" class="mobile-menu__close" data-menu-close>
+      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+        <path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+      </svg>
+      <span>{t.header.menuClose}</span>
+    </button>
+  </div>
+  <nav aria-label={t.header.navLabel}>
+    <ul role="list" class="mobile-menu__list">
+      {
+        items.map((item) => (
+          <li>
+            <a href={item.href} data-nav-link={item.anchor} data-menu-link>
+              {item.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+  <div class="mobile-menu__tools">
+    <LangSwitch locale={locale} routeKey={routeKey} />
+    <ThemeToggle locale={locale} />
+  </div>
+  <Button href={ctaHref} size="lg" arrow="right" class="mobile-menu__cta" data-menu-link>{t.header.cta}</Button>
+</dialog>
+
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>('[data-menu]');
+  const trigger = document.querySelector<HTMLButtonElement>('[data-menu-open]');
+
+  if (dialog && trigger) {
+    const focusables = () =>
+      Array.from(dialog.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')).filter(
+        (el) => el.offsetParent !== null,
+      );
+
+    trigger.addEventListener('click', () => {
+      dialog.showModal();
+      trigger.setAttribute('aria-expanded', 'true');
+      document.documentElement.classList.add('has-open-menu');
+    });
+
+    let followingLink = false;
+    dialog.addEventListener('close', () => {
+      trigger.setAttribute('aria-expanded', 'false');
+      document.documentElement.classList.remove('has-open-menu');
+      // Return focus to the trigger, unless the user followed a link (let the target take over).
+      if (!followingLink) trigger.focus();
+      followingLink = false;
+    });
+
+    dialog.addEventListener('click', (event) => {
+      const target = event.target as Element;
+      if (target === dialog) dialog.close(); // backdrop click
+      if (target.closest('[data-menu-link]')) {
+        followingLink = true;
+        dialog.close();
+      } else if (target.closest('[data-menu-close]')) {
+        dialog.close();
+      }
+    });
+
+    // Keep Tab inside the sheet.
+    dialog.addEventListener('keydown', (event) => {
+      if (event.key !== 'Tab') return;
+      const items = focusables();
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (!first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    });
+
+    // Close if the viewport grows past the breakpoint while open.
+    matchMedia('(min-width: 960px)').addEventListener('change', (e) => {
+      if (e.matches && dialog.open) dialog.close();
+    });
+  }
+</script>
+
+<style>
+  .mobile-menu__trigger,
+  .mobile-menu__close {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0 var(--s-3);
+    border: 1px solid var(--line);
+    border-radius: var(--r-btn);
+    background: none;
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .mobile-menu__trigger:hover,
+  .mobile-menu__close:hover { background: var(--surface-2); }
+  @media (min-width: 960px) {
+    .mobile-menu__trigger { display: none; }
+  }
+  /* Very narrow screens (and user text spacing): icon only, the label stays as the accessible name. */
+  @media (max-width: 359px) {
+    .mobile-menu__trigger { padding: 0; justify-content: center; }
+    .mobile-menu__trigger-text {
+      position: absolute;
+      width: 1px; height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+  }
+
+  .mobile-menu {
+    width: 100%;
+    max-width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    padding: var(--s-4) var(--gutter) var(--s-6);
+    border: 0;
+    background: var(--bg);
+    color: var(--ink);
+    flex-direction: column;
+    gap: var(--s-5);
+    overflow-y: auto;
+  }
+  .mobile-menu[open] { display: flex; }
+  .mobile-menu::backdrop { background: rgb(14 26 31 / .4); }
+  .mobile-menu__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: var(--s-3);
+    border-bottom: 1.5px solid var(--horizon);
+  }
+  .mobile-menu__list { list-style: none; padding: 0; }
+  .mobile-menu__list a {
+    display: flex;
+    align-items: center;
+    min-height: 56px;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink);
+    text-decoration: none;
+    font-family: var(--font-display);
+    font-weight: 650;
+    font-size: var(--step-3);
+  }
+  .mobile-menu__list a:hover { color: var(--sea); }
+  .mobile-menu__tools { display: flex; align-items: center; justify-content: space-between; }
+  .mobile-menu :global(.mobile-menu__cta) { width: 100%; margin-top: auto; }
+  :global(html.has-open-menu) { overflow: hidden; }
+</style>

@@ -1,0 +1,20 @@
+---
+/**
+ * External link: new tab, rel="noopener", visible ↗, and a visually hidden
+ * "(opens in a new tab)" / "(si apre in una nuova scheda)".
+ */
+import type { HTMLAttributes } from 'astro/types';
+import { useStrings } from '../i18n';
+import type { Locale } from '../i18n/locales';
+
+interface Props extends Omit<HTMLAttributes<'a'>, 'target' | 'rel'> {
+  href: string;
+  locale: Locale;
+  /** Hide the ↗ glyph (e.g. icon-only links). */
+  noArrow?: boolean;
+}
+const { href, locale, noArrow = false, class: className, ...rest } = Astro.props;
+const t = useStrings(locale);
+---
+
+<a href={href} target="_blank" rel="noopener" class:list={['ext-link', className]} {...rest}><slot />{!noArrow && <span class="ext-link__arrow" aria-hidden="true">&nbsp;↗</span>}<span class="visually-hidden"> {t.externalHint}</span></a>

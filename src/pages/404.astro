@@ -1,0 +1,89 @@
+---
+/**
+ * Bilingual not-found page (spec §7.3): English first, an Italian block marked
+ * lang="it". Visual: static contours, the horizon line and a single buoy dot.
+ */
+import BaseLayout from '../components/BaseLayout.astro';
+import Button from '../components/Button.astro';
+import Contours from '../components/Contours.astro';
+import { notFoundMeta } from '../data/meta';
+import { localeHref } from '../i18n';
+---
+
+<BaseLayout
+  title={notFoundMeta.title}
+  description={notFoundMeta.description}
+  locale="en"
+  routeKey={null}
+  noindex
+  hideMobileCta
+>
+  <section class="not-found section" aria-labelledby="not-found-title">
+    <div class="not-found__chart" aria-hidden="true">
+      <Contours width={1200} height={520} levels={9} seed="off-the-chart" />
+    </div>
+
+    <div class="container not-found__inner">
+      <div class="not-found__block">
+        <h1 id="not-found-title">Off the chart.</h1>
+        <p class="lead">This page hasn't been sounded yet. The link may be old, or the address mistyped.</p>
+        <Button href={localeHref('home', 'en')} arrow="right">Back to the home page</Button>
+      </div>
+
+      <div class="not-found__horizon" aria-hidden="true">
+        <span class="buoy-dot"></span>
+      </div>
+
+      <div class="not-found__block not-found__block--it" lang="it">
+        <p class="lead">
+          <strong class="not-found__it-title">Fuori mappa.</strong> Questa pagina non esiste, oppure l'indirizzo è sbagliato.
+        </p>
+        <Button href={localeHref('home', 'it')} variant="secondary" arrow="right" hreflang="it">Torna alla home</Button>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .not-found {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    min-height: min(80vh, 760px);
+    display: grid;
+    align-content: center;
+  }
+  .not-found__chart {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.9;
+    mask-image: linear-gradient(to bottom, transparent, #000 25%, #000 70%, transparent);
+  }
+  .not-found__inner {
+    display: grid;
+    gap: var(--s-7);
+    width: 100%;
+  }
+  .not-found__block {
+    display: grid;
+    gap: var(--s-5);
+    justify-items: start;
+    max-width: var(--measure);
+  }
+  .not-found__block .lead { margin: 0; }
+  .not-found__horizon {
+    position: relative;
+    border-top: 1.5px solid var(--horizon);
+  }
+  /* A single buoy floating on the line, a little off-centre. */
+  .not-found__horizon .buoy-dot {
+    position: absolute;
+    left: 62%;
+    top: -4.75px; /* centre the 8px dot on the 1.5px line */
+  }
+  .not-found__it-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+  }
+</style>

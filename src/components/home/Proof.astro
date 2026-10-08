@@ -1,0 +1,29 @@
+---
+/**
+ * Soundings strip (#proof, spec §3.2 / §4.2): visually hidden H2, five proof
+ * figures on the horizon rule, the footnote and the tech line.
+ */
+import Soundings from '../Soundings.astro';
+import ChipList from '../ChipList.astro';
+import { homeCopy } from '../../i18n/home';
+import type { Locale } from '../../i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const copy = homeCopy[locale].proof;
+---
+
+<section id="proof" class="proof section" aria-labelledby="proof-title">
+  <div class="container">
+    <h2 id="proof-title" class="visually-hidden">{copy.title}</h2>
+    <Soundings items={copy.items} footnote={copy.footnote} variant="strip" />
+    <ChipList items={copy.tech} class="proof__tech" />
+  </div>
+</section>
+
+<style>
+  .proof { padding-block: var(--s-5) var(--s-8); }
+  .proof :global(.proof__tech) { margin-top: var(--s-5); }
+</style>

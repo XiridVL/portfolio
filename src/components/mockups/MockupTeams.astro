@@ -1,0 +1,106 @@
+---
+/**
+ * vStats Teams strategy board (spec §10.4): phase tabs 1–7, a square board
+ * with an abstract geometric map (three rooms plus corridors), two arrows, a
+ * shaded zone, a vision cone and numbered circles 1–5, plus an eight-step
+ * grading legend (brilliant → blunder) whose ticks light up once on view.
+ */
+import Frame from './Frame.astro';
+import type { Locale } from '../../i18n';
+
+interface Props {
+  locale?: Locale;
+  class?: string;
+}
+const { locale, class: className } = Astro.props;
+
+const tabs = [1, 2, 3, 4, 5, 6, 7]
+  .map((n, i) => {
+    const x = 24 + i * 44;
+    return i === 0
+      ? `<rect class="k-sea" x="${x}" y="14" width="36" height="26" rx="2"/><text class="k-on mid" x="${x + 18}" y="31">${n}</text>`
+      : `<rect class="o-ls" x="${x + 0.5}" y="14.5" width="35" height="25" rx="2"/><text class="mid" x="${x + 18}" y="31">${n}</text>`;
+  })
+  .join('');
+
+const markers = [
+  [52, 60],
+  [96, 88],
+  [232, 98],
+  [150, 232],
+  [200, 246],
+]
+  .map(([x, y], i) => `<circle class="k-sea" cx="${x}" cy="${y}" r="10"/><text class="k-on mid n" x="${x}" y="${y! + 4}">${i + 1}</text>`)
+  .join('');
+
+const board = [
+  '<rect class="k-s2" width="300" height="300" rx="6"/>',
+  // Corridors, then rooms on top
+  '<path class="k-sf o-ls" d="M60 110h28v88H60zM214 148h26v50h-26zM130 66h58v24h-58z"/>',
+  '<path class="k-sf o-ls" d="M24 28h96l12 24v60H24zM186 40h90v110h-66l-24-24zM72 196h156v76H96l-24-24z"/>',
+  // Shaded zone and vision cone
+  '<path class="zn" d="M202 58h60v70h-46l-14-14z"/>',
+  '<path class="cn" d="M100 236l112-30 4 56z"/>',
+  // Arrows
+  '<path class="o-sea ar" d="M74 74v112q0 22 22 22h24"/>',
+  '<path class="k-sea" d="M120 202l10 6-10 6z"/>',
+  '<path class="o-sea ar" d="M112 78h62q20 0 20 20v8"/>',
+  '<path class="k-sea" d="M188 104l6 10 6-10z"/>',
+  markers,
+].join('');
+
+const notes = [176, 132, 208, 150]
+  .map(
+    (w, i) =>
+      `<g transform="translate(352 ${52 + i * 54})"><use href="#mkt-n"/><rect class="k-s2" x="30" y="12" width="${w}" height="8" rx="4"/><rect class="k-s2" x="30" y="26" width="${w - 60}" height="6" rx="3"/></g>`,
+  )
+  .join('');
+
+const ticks = Array.from(
+  { length: 8 },
+  (_, i) => `<rect class="t t${i}" style="--i:${i}" x="${352 + i * 33}" y="300" width="27" height="14" rx="2"/>`,
+).join('');
+
+const svg = [
+  '<defs><g id="mkt-n"><rect class="o-ln" x=".5" y=".5" width="263" height="43" rx="6"/><rect class="k-ls" x="14" y="14" width="4" height="16" rx="1"/></g></defs>',
+  tabs,
+  `<g transform="translate(24 52)">${board}</g>`,
+  notes,
+  ticks,
+  '<text x="352" y="336">brilliant</text>',
+  '<text class="end" x="616" y="336">blunder</text>',
+].join('');
+---
+
+<Frame
+  class:list={['mk-teams', className]}
+  locale={locale}
+  play
+  label="Illustration of the vStats Teams strategy board with an abstract map, arrows and zones, and an eight-step grading legend."
+>
+  <svg viewBox="0 0 640 372" focusable="false" set:html={svg} />
+</Frame>
+
+<style is:global>
+  .mk-teams .zn { fill: color-mix(in srgb, var(--buoy) 22%, transparent); stroke: var(--buoy); stroke-dasharray: 4 3; }
+  .mk-teams .cn { fill: color-mix(in srgb, var(--sea) 20%, transparent); }
+  .mk-teams .ar { stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .mk-teams .n { font-size: 11px; font-weight: 400; }
+  /* Grading ramp: --ok → --muted → --buoy-ink. */
+  .mk-teams .t0 { fill: var(--ok); }
+  .mk-teams .t1 { fill: color-mix(in oklab, var(--ok) 67%, var(--muted)); }
+  .mk-teams .t2 { fill: color-mix(in oklab, var(--ok) 33%, var(--muted)); }
+  .mk-teams .t3 { fill: var(--muted); }
+  .mk-teams .t4 { fill: color-mix(in oklab, var(--buoy-ink) 25%, var(--muted)); }
+  .mk-teams .t5 { fill: color-mix(in oklab, var(--buoy-ink) 50%, var(--muted)); }
+  .mk-teams .t6 { fill: color-mix(in oklab, var(--buoy-ink) 75%, var(--muted)); }
+  .mk-teams .t7 { fill: var(--buoy-ink); }
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+    .mk-teams .t { opacity: 0.18; }
+    .mk-teams.is-playing .t {
+      animation: mk-teams-tick 260ms ease forwards;
+      animation-delay: calc(150ms + var(--i) * 150ms);
+    }
+  }
+  @keyframes mk-teams-tick { to { opacity: 1; } }
+</style>

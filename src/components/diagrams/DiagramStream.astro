@@ -1,0 +1,137 @@
+---
+/**
+ * 11.2 Stream (vStats Desktop). Lanes: local game client (read-only), Rust core,
+ * vStats backend, interface. Result lines flow back one by one and the
+ * interface rows fill in as they arrive.
+ */
+import DiagramFrame from './DiagramFrame.astro';
+import Arrow from './Arrow.astro';
+import Box from './Box.astro';
+import Badge from './Badge.astro';
+import Label from './Label.astro';
+
+const steps = [
+  'The Rust core reads the local game client, read-only, to detect the match phase.',
+  'When a match is found, it sends the roster to the vStats backend.',
+  'The backend streams back one line per player as each lookup finishes.',
+  'The core passes each row to the interface, which fills in the roster.',
+];
+
+/* wide: horizontal swimlanes, time runs left to right */
+const lanes: { label: string; note?: string }[] = [
+  { label: 'Local game client', note: '(read-only)' },
+  { label: 'Rust core' },
+  { label: 'vStats backend' },
+  { label: 'Interface' },
+];
+const laneH = 80;
+const laneY = (i: number) => i * laneH + laneH / 2;
+const [clientY, coreY, backendY, uiY] = [0, 1, 2, 3].map(laneY) as [number, number, number, number];
+const streamX = [520, 600, 680];
+const rowsX = [550, 630, 710];
+const tableRows = [0, 1, 2, 3, 4];
+
+/* tall: columns, time runs top to bottom */
+const colX = [46, 130, 214, 298] as const;
+const tallHeads: string[][] = [['Local game', 'client'], ['Rust core'], ['vStats', 'backend'], ['Interface']];
+const tallStream = [210, 240, 270];
+const tallRows = [225, 255, 285];
+---
+
+<DiagramFrame
+  id="diagram-stream"
+  title="vStats Desktop streaming flow"
+  desc="The Rust core reads the local game client read-only, sends the lobby roster to the vStats backend, receives one result line per player as each lookup finishes, and passes each row to the interface, which fills in. The list below describes each step."
+  steps={steps}
+  wideViewBox="0 -8 900 336"
+  tallViewBox="-2 -2 344 380"
+>
+  <Fragment slot="wide">
+    {
+      lanes.map((lane, i) => (
+        <>
+          <Box x={0} y={i * laneH + 8} w={188} h={laneH - 16} label={lane.label} note={lane.note} quiet />
+          <path class="d-rule d-rule--dashed" d={`M198,${laneY(i)} L890,${laneY(i)}`} />
+        </>
+      ))
+    }
+
+    <g class="d-step" data-step="1">
+      <Arrow from={[260, clientY]} to={[260, coreY]} />
+      <Badge x={236} y={80} n={1} />
+      <Label x={274} y={80} text="match phase" anchor="start" />
+    </g>
+
+    <g class="d-step" data-step="2">
+      <Arrow from={[380, coreY]} to={[380, backendY]} />
+      <Badge x={356} y={160} n={2} />
+      <Label x={394} y={160} text="roster" anchor="start" />
+    </g>
+
+    <g class="d-step" data-step="3">
+      {streamX.map((x) => <Arrow from={[x, backendY]} to={[x, coreY]} />)}
+      <Badge x={496} y={160} n={3} />
+      <Label x={600} y={96} text="one line per player" />
+      <Label x={745} y={160} text="…" muted />
+    </g>
+
+    <g class="d-step" data-step="4">
+      {rowsX.map((x) => <Arrow from={[x, coreY]} to={[x, uiY]} />)}
+      <Badge x={735} y={240} n={4} />
+      {
+        tableRows.map((r) =>
+          r < 3 ? (
+            <rect class="d-fill" x={762} y={248 + r * 13.5} width={128} height={10} rx="2" />
+          ) : (
+            <rect class="d-box d-box--quiet d-box--dashed" x={762} y={248 + r * 13.5} width={128} height={10} rx="2" />
+          ),
+        )
+      }
+    </g>
+  </Fragment>
+
+  <Fragment slot="tall">
+    {
+      tallHeads.map((lines, i) => (
+        <>
+          <Label x={colX[i]} y={12} text={lines} />
+          <path class="d-rule" d={`M${colX[i] - 34},56 L${colX[i] + 34},56`} />
+          <path class="d-rule d-rule--dashed" d={`M${colX[i]},62 L${colX[i]},300`} />
+        </>
+      ))
+    }
+    <Label x={colX[0]} y={44} text="(read-only)" muted />
+
+    <g class="d-step" data-step="1">
+      <Arrow from={[colX[0], 96]} to={[colX[1], 96]} />
+      <Badge x={88} y={78} n={1} r={11} />
+      <Label x={88} y={114} text="match phase" />
+    </g>
+
+    <g class="d-step" data-step="2">
+      <Arrow from={[colX[1], 150]} to={[colX[2], 150]} />
+      <Badge x={172} y={132} n={2} r={11} />
+      <Label x={172} y={168} text="roster" />
+    </g>
+
+    <g class="d-step" data-step="3">
+      {tallStream.map((y) => <Arrow from={[colX[2], y]} to={[colX[1], y]} />)}
+      <Badge x={172} y={192} n={3} r={11} />
+      <Label x={150} y={302} text="…" muted />
+    </g>
+
+    <g class="d-step" data-step="4">
+      {tallRows.map((y) => <Arrow from={[colX[1], y]} to={[colX[3], y]} />)}
+      <Badge x={256} y={205} n={4} r={11} />
+      {
+        tableRows.map((r) =>
+          r < 3 ? (
+            <rect class="d-fill" x={262} y={310 + r * 13} width={72} height={10} rx="2" />
+          ) : (
+            <rect class="d-box d-box--quiet d-box--dashed" x={262} y={310 + r * 13} width={72} height={10} rx="2" />
+          ),
+        )
+      }
+    </g>
+  </Fragment>
+</DiagramFrame>

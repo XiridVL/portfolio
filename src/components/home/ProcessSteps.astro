@@ -1,0 +1,85 @@
+---
+/** How I work (#process, spec §3.5 / §4.5): four numbered steps plus the ownership note. */
+import SectionHeader from '../SectionHeader.astro';
+import { homeCopy } from '../../i18n/home';
+import type { Locale } from '../../i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const copy = homeCopy[locale].process;
+---
+
+<section id="process" class="section section--deferred" aria-labelledby="process-title">
+  <div class="container">
+    <SectionHeader id="process" number={copy.number} label={copy.label} title={copy.title} />
+    <div class="process">
+      <ol class="process__steps" role="list">
+        {
+          copy.steps.map((step, i) => (
+            <li class="process__step reveal">
+              <span class="process__num mono" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+              <p>
+                <strong class="process__title">{step.title}</strong> {step.text}
+              </p>
+            </li>
+          ))
+        }
+      </ol>
+      <p class="process__note">
+        <span class="buoy-dot" aria-hidden="true"></span>
+        <span>{copy.note}</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .process {
+    display: grid;
+    gap: var(--s-7);
+    grid-template-columns: minmax(0, 1fr);
+  }
+  @media (min-width: 960px) {
+    .process { grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); align-items: start; gap: var(--s-8); }
+  }
+  .process__steps {
+    display: grid;
+    gap: var(--s-5);
+    grid-template-columns: minmax(0, 1fr);
+    counter-reset: none;
+  }
+  @media (min-width: 640px) {
+    .process__steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  .process__step {
+    display: grid;
+    gap: var(--s-3);
+    align-content: start;
+    padding-top: var(--s-4);
+    border-top: 1px solid var(--line-strong);
+  }
+  .process__num {
+    font-size: var(--step-3);
+    font-weight: 400;
+    line-height: 1;
+    color: var(--sea);
+  }
+  .process__title { font-family: var(--font-display); font-weight: 650; color: var(--ink); }
+  .process__note {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-3);
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    font-weight: 650;
+    line-height: 1.2;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+  .process__note .buoy-dot { flex: none; transform: translateY(-0.15em); }
+  @media (min-width: 960px) {
+    .process__note { font-size: var(--step-4); position: sticky; top: calc(var(--header-h-compact, 56px) + var(--s-6)); }
+  }
+</style>

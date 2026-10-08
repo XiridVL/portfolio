@@ -1,0 +1,47 @@
+---
+/** Previous / next case study (order: vStats → Desktop → Teams → IVPITER → vStats). */
+import { adjacentProjects, type ProjectSlug } from '../data/projects';
+import { localeHref, useStrings, type Locale } from '../i18n';
+
+interface Props {
+  slug: ProjectSlug;
+  locale: Locale;
+  class?: string;
+}
+const { slug, locale, class: className } = Astro.props;
+const t = useStrings(locale).caseStudy;
+const { prev, next } = adjacentProjects(slug);
+---
+
+<nav class:list={['case-nav', className]} aria-label={t.navLabel}>
+  <a class="case-nav__link case-nav__link--prev" href={localeHref(prev.slug, locale)} rel="prev">
+    <span class="label muted"><span aria-hidden="true">← </span>{t.prev}</span>
+    <span class="case-nav__name">{prev.name}</span>
+  </a>
+  <a class="case-nav__link case-nav__link--next" href={localeHref(next.slug, locale)} rel="next">
+    <span class="label muted">{t.next}<span aria-hidden="true"> →</span></span>
+    <span class="case-nav__name">{next.name}</span>
+  </a>
+</nav>
+
+<style>
+  .case-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--s-4);
+    border-top: 1px solid var(--line);
+    padding-top: var(--s-5);
+  }
+  .case-nav__link {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-1);
+    min-height: 44px;
+    padding: var(--s-3) 0;
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .case-nav__link--next { text-align: right; align-items: flex-end; }
+  .case-nav__name { font-family: var(--font-display); font-weight: 650; font-size: var(--step-2); }
+  .case-nav__link:hover .case-nav__name { color: var(--sea); text-decoration: underline; text-underline-offset: 0.2em; }
+</style>

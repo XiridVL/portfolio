@@ -1,0 +1,68 @@
+---
+/**
+ * Button or link styled as a button.
+ *   variant="primary"    deep-sea teal fill (CTA). Never amber or coral.
+ *   variant="secondary"  1.5px sea outline
+ *   variant="text"       underlined sea text link with optional arrow
+ * `arrow` appends an aria-hidden → or ↓ that nudges 4px on hover. Pass the
+ * label WITHOUT the arrow character: <Button href="#contact" arrow="right">Get a free quote</Button>
+ * Renders <a> when `href` is set, otherwise <button>.
+ */
+import type { HTMLAttributes } from 'astro/types';
+
+type Common = {
+  variant?: 'primary' | 'secondary' | 'text';
+  arrow?: 'right' | 'down';
+  size?: 'md' | 'lg';
+  class?: string;
+};
+type Props = Common & (HTMLAttributes<'a'> | HTMLAttributes<'button'>);
+
+const { variant = 'primary', arrow, size = 'md', class: className, href, ...rest } = Astro.props as Common &
+  HTMLAttributes<'a'> & HTMLAttributes<'button'>;
+const Tag = href ? 'a' : 'button';
+const classes = ['btn', `btn--${variant}`, `btn--${size}`, className];
+const glyph = arrow === 'right' ? '→' : arrow === 'down' ? '↓' : null;
+const buttonType = !href && !rest.type ? 'button' : rest.type;
+---
+
+<Tag href={href} class:list={classes} {...rest} type={buttonType}>
+  <span class="btn__label"><slot /></span>{glyph && <span class:list={['btn__arrow', `btn__arrow--${arrow}`]} aria-hidden="true">{glyph}</span>}
+</Tag>
+
+<style>
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    min-height: 44px;
+    padding: 10px 20px;
+    border: 1.5px solid transparent;
+    border-radius: var(--r-btn);
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: var(--step-0);
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--dur-1) ease, color var(--dur-1) ease, border-color var(--dur-1) ease;
+  }
+  .btn--lg { min-height: 52px; padding: 14px 26px; font-size: var(--step-1); }
+  .btn--primary { background: var(--sea-strong); color: var(--on-sea); }
+  .btn--primary:hover { background: var(--sea-strong-hover); color: var(--on-sea); }
+  .btn--secondary { background: transparent; color: var(--sea); border-color: var(--sea); }
+  .btn--secondary:hover { background: var(--surface-2); color: var(--ink); }
+  .btn--text {
+    padding-inline: 0;
+    background: none;
+    color: var(--sea);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+  .btn--text:hover { color: var(--sea-strong-hover); text-decoration-thickness: 2px; }
+  .btn__arrow { display: inline-block; transition: transform var(--dur-2) var(--ease-tide); }
+  .btn:hover .btn__arrow--right, .btn:focus-visible .btn__arrow--right { transform: translateX(4px); }
+  .btn:hover .btn__arrow--down, .btn:focus-visible .btn__arrow--down { transform: translateY(4px); }
+</style>

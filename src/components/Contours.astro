@@ -1,0 +1,35 @@
+---
+/**
+ * Static isobaths (spec §8.6): decorative nested contours computed at build
+ * time from a fixed seed. Hero and About only. Never animated.
+ */
+import { contourPaths, type ContourOptions } from '../lib/contours';
+
+interface Props extends ContourOptions {
+  class?: string;
+}
+
+const { class: className, width = 800, height = 600, ...options } = Astro.props;
+const paths = contourPaths({ width, height, ...options });
+---
+
+<svg
+  class:list={['contours', className]}
+  viewBox={`0 0 ${width} ${height}`}
+  preserveAspectRatio="xMidYMid slice"
+  aria-hidden="true"
+  focusable="false"
+  fill="none"
+>
+  <g stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke">
+    {paths.map((d) => <path d={d} vector-effect="non-scaling-stroke" />)}
+  </g>
+</svg>
+
+<style>
+  .contours {
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+</style>

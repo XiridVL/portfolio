@@ -1,0 +1,32 @@
+---
+/**
+ * A labelled box. `label` may be several lines; `note` adds a muted line below.
+ * Text is centred on the box and set in the diagram's mono face.
+ */
+interface Props {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  label: string | string[];
+  note?: string;
+  dashed?: boolean;
+  /** Lighter treatment for supporting elements (lanes, placeholders). */
+  quiet?: boolean;
+}
+const { x, y, w, h, label, note, dashed = false, quiet = false } = Astro.props;
+const lines = [...(Array.isArray(label) ? label : [label])];
+const all = note ? [...lines, note] : lines;
+const firstDy = -((all.length - 1) / 2) * 1.25;
+---
+
+<rect class:list={['d-box', { 'd-box--dashed': dashed, 'd-box--quiet': quiet }]} x={x} y={y} width={w} height={h} rx="4" />
+<text class="d-label" x={x + w / 2} y={y + h / 2} text-anchor="middle" dominant-baseline="central">
+  {
+    all.map((line, i) => (
+      <tspan x={x + w / 2} dy={`${i === 0 ? firstDy : 1.25}em`} class={note && i === all.length - 1 ? 'd-muted' : undefined}>
+        {line}
+      </tspan>
+    ))
+  }
+</text>

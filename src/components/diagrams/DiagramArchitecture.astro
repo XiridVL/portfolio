@@ -1,0 +1,137 @@
+---
+/**
+ * 11.1 Architecture (vStats). Five kinds of client call one Node/Express API,
+ * which talks to its stores and providers; a status page probes it from outside.
+ */
+import DiagramFrame from './DiagramFrame.astro';
+import Arrow from './Arrow.astro';
+import Box from './Box.astro';
+import Badge from './Badge.astro';
+import Label from './Label.astro';
+import type { Pt } from './geometry';
+
+const architectureSteps = [
+  'Five kinds of client (website, mobile app, vStats Desktop, vStats Teams, partner site) call one Node/Express API.',
+  'The API reads and writes Redis (sessions, caches, SEO summaries) and PostgreSQL (team data).',
+  'It fetches player data from the Riot Games API and a third-party data service.',
+  'Stripe and the App Store verification path report subscription changes back to the API.',
+  'A status page on Cloudflare checks the API and its dependencies from outside.',
+];
+
+const clients = ['Web', 'Mobile', 'Desktop', 'Teams', 'Partner site'];
+
+/* wide layout */
+const W = {
+  client: { x: 20, w: 200, h: 44, cy: [55, 120, 185, 250, 315] },
+  api: { x: 320, y: 110, w: 210, h: 150 },
+  apiIn: [145, 165, 185, 205, 225],
+  apiOut: [135, 155, 175, 195, 215, 235],
+  svc: { x: 630, w: 260, h: 40, cy: [50, 104, 158, 212, 266, 320] },
+};
+const wideClientEdge = W.client.x + W.client.w;
+const wideApiRight = W.api.x + W.api.w;
+const wideOut = (i: number): [Pt, Pt] => [
+  [wideApiRight, W.apiOut[i]!],
+  [W.svc.x, W.svc.cy[i]!],
+];
+
+/* tall layout */
+const T = {
+  spineX: 14,
+  svc: { x: 56, w: 244, h: 34, cy: [257, 299, 351, 393, 445, 487] },
+};
+const tallOut = (i: number): [Pt, Pt] => [
+  [T.spineX, T.svc.cy[i]!],
+  [T.svc.x, T.svc.cy[i]!],
+];
+
+const services: (string | string[])[] = ['Redis', 'PostgreSQL', 'Riot Games API', 'Third-party data service', 'Stripe', 'App Store'];
+const groups = [
+  { step: 2, items: [0, 1], heads: 'both' as const },
+  { step: 3, items: [2, 3], heads: 'end' as const },
+  { step: 4, items: [4, 5], heads: 'start' as const },
+];
+const wideBadgeY = [87, 185, 284];
+const tallBadgeY = [278, 372, 466];
+---
+
+<DiagramFrame
+  id="diagram-architecture"
+  title="vStats architecture"
+  desc="Website, mobile, desktop, Teams and partner clients call one Node/Express API, which uses Redis, PostgreSQL, the Riot Games API, a third-party data service, Stripe and the App Store; a status page on Cloudflare probes it from outside. The list below describes each step."
+  steps={architectureSteps}
+  wideViewBox="0 20 900 430"
+  tallViewBox="-4 -4 348 582"
+>
+  <Fragment slot="wide">
+    <g class="d-step" data-step="1">
+      {clients.map((label, i) => <Box x={W.client.x} y={W.client.cy[i]! - W.client.h / 2} w={W.client.w} h={W.client.h} label={label} />)}
+      {clients.map((_, i) => <Arrow from={[wideClientEdge, W.client.cy[i]!]} to={[W.api.x, W.apiIn[i]!]} bend="h" />)}
+      <Badge x={245} y={152} n={1} />
+    </g>
+
+    <Box x={W.api.x} y={W.api.y} w={W.api.w} h={W.api.h} label="Node/Express API" />
+
+    {
+      groups.map((g, gi) => (
+        <g class="d-step" data-step={g.step}>
+          {g.items.map((i) => {
+            const [a, b] = wideOut(i);
+            return (
+              <>
+                <Box x={W.svc.x} y={W.svc.cy[i]! - W.svc.h / 2} w={W.svc.w} h={W.svc.h} label={services[i]!} />
+                <Arrow from={a} to={b} bend="h" heads={g.heads} />
+              </>
+            );
+          })}
+          <Badge x={605} y={wideBadgeY[gi]!} n={g.step} />
+        </g>
+      ))
+    }
+
+    <g class="d-step" data-step="5">
+      <Box x={280} y={390} w={290} h={50} label="Status page (Cloudflare)" dashed />
+      <Arrow from={[425, 390]} to={[425, W.api.y + W.api.h]} dashed />
+      <Badge x={425} y={325} n={5} />
+      <Label x={447} y={325} text="probes" anchor="start" muted />
+    </g>
+  </Fragment>
+
+  <Fragment slot="tall">
+    <g class="d-step" data-step="1">
+      <Box x={0} y={0} w={162} h={34} label="Web" />
+      <Box x={178} y={0} w={162} h={34} label="Mobile" />
+      <Box x={0} y={44} w={162} h={34} label="Desktop" />
+      <Box x={178} y={44} w={162} h={34} label="Teams" />
+      <Box x={0} y={88} w={340} h={34} label="Partner site" />
+      <Arrow from={[170, 122]} to={[170, 166]} />
+      <Badge x={146} y={144} n={1} r={11} />
+    </g>
+
+    <Box x={0} y={166} w={340} h={44} label="Node/Express API" />
+    <path class="d-line" d={`M${T.spineX},210 L${T.spineX},${T.svc.cy[5]}`} />
+
+    {
+      groups.map((g, gi) => (
+        <g class="d-step" data-step={g.step}>
+          {g.items.map((i) => {
+            const [a, b] = tallOut(i);
+            return (
+              <>
+                <Box x={T.svc.x} y={T.svc.cy[i]! - T.svc.h / 2} w={T.svc.w} h={T.svc.h} label={services[i]!} />
+                <Arrow from={a} to={b} heads={g.heads} />
+              </>
+            );
+          })}
+          <Badge x={T.spineX} y={tallBadgeY[gi]!} n={g.step} r={11} />
+        </g>
+      ))
+    }
+
+    <g class="d-step" data-step="5">
+      <Box x={56} y={530} w={284} h={40} label="Status page (Cloudflare)" dashed />
+      <Arrow from={[322, 530]} to={[322, 210]} dashed />
+      <Badge x={322} y={516} n={5} r={11} />
+    </g>
+  </Fragment>
+</DiagramFrame>

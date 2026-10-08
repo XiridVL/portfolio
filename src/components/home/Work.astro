@@ -1,0 +1,49 @@
+---
+/**
+ * Selected work (#work, spec §3.3 / §4.3): four project cards in a 2×2 grid
+ * from 960px, then the Riot small print.
+ */
+import SectionHeader from '../SectionHeader.astro';
+import WorkCard from '../WorkCard.astro';
+import RiotDisclaimer from '../RiotDisclaimer.astro';
+import { projectCards } from '../../data/projects';
+import { homeCopy } from '../../i18n/home';
+import type { Locale } from '../../i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const copy = homeCopy[locale].work;
+const cards = projectCards(locale);
+---
+
+<section id="work" class="section" aria-labelledby="work-title">
+  <div class="container">
+    <SectionHeader id="work" number={copy.number} label={copy.label} title={copy.title} intro={copy.intro} />
+    <ul class="work-grid" role="list">
+      {
+        cards.map((card) => (
+          <li class="work-grid__item reveal">
+            <WorkCard {...card} locale={locale} />
+          </li>
+        ))
+      }
+    </ul>
+    <RiotDisclaimer scope="grid" locale={locale} class="work-small-print" />
+  </div>
+</section>
+
+<style>
+  .work-grid {
+    display: grid;
+    gap: var(--s-5);
+    grid-template-columns: minmax(0, 1fr);
+  }
+  @media (min-width: 960px) {
+    .work-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-6); }
+  }
+  .work-grid__item { display: flex; }
+  .work-grid__item > :global(*) { flex: 1; }
+  .work-grid + :global(.work-small-print) { margin-top: var(--s-6); }
+</style>

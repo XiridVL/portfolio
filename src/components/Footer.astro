@@ -1,0 +1,91 @@
+---
+/**
+ * Site footer (spec §2.3), identical structure in both locales.
+ * The P.IVA line renders only once `site.vatNumber` is filled in.
+ */
+import Monogram from './Monogram.astro';
+import LangSwitch from './LangSwitch.astro';
+import ExternalLink from './ExternalLink.astro';
+import RiotDisclaimer from './RiotDisclaimer.astro';
+import { site } from '../data/site';
+import { localeHref, useStrings, type Locale, type RouteKey } from '../i18n';
+
+interface Props {
+  locale: Locale;
+  routeKey?: RouteKey;
+}
+const { locale, routeKey } = Astro.props;
+const t = useStrings(locale);
+---
+
+<footer class="site-footer">
+  <div class="container">
+    <span class="horizon site-footer__rule" aria-hidden="true"></span>
+    <div class="site-footer__grid">
+      <div class="site-footer__id">
+        <p class="site-footer__name">
+          <Monogram size={28} />
+          <span><strong>{site.name}</strong> — {t.footer.role}</span>
+        </p>
+        <p class="site-footer__coords mono">{t.footer.coords}</p>
+      </div>
+
+      <ul class="site-footer__links" role="list">
+        <li><a href={`mailto:${site.email}`}>{site.email}</a></li>
+        <li><ExternalLink href={site.github} locale={locale}>GitHub</ExternalLink></li>
+        <li><ExternalLink href={site.linkedin} locale={locale}>LinkedIn</ExternalLink></li>
+        <li><a href={localeHref('privacy', locale)}>{t.footer.privacy}</a></li>
+      </ul>
+
+      <LangSwitch locale={locale} routeKey={routeKey} class="site-footer__lang" />
+    </div>
+
+    <div class="site-footer__legal">
+      {site.vatNumber && <p class="mono">{t.footer.vatLabel} {site.vatNumber}</p>}
+      <p>{t.footer.noCookies}</p>
+      <RiotDisclaimer scope="site" locale={locale} />
+      <p>{t.footer.copyright}</p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    padding-block: var(--s-8) var(--s-7);
+    font-size: var(--step--1);
+    color: var(--muted);
+  }
+  /* Room for the sticky mobile CTA bar. */
+  @media (max-width: 767px) {
+    .site-footer { padding-bottom: calc(var(--s-7) + 72px); }
+  }
+  .site-footer__rule { margin-bottom: var(--s-6); }
+  .site-footer__grid {
+    display: grid;
+    gap: var(--s-5);
+    align-items: start;
+  }
+  @media (min-width: 768px) {
+    .site-footer__grid { grid-template-columns: 1.4fr 1fr auto; }
+  }
+  .site-footer__name {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    color: var(--ink);
+    font-size: var(--step-0);
+  }
+  .site-footer__coords { margin-top: var(--s-2); letter-spacing: 0.04em; }
+  .site-footer__links { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0 var(--s-4); }
+  .site-footer__links a { display: inline-flex; align-items: center; min-height: 44px; }
+  .site-footer__grid :global(.site-footer__lang) { margin-left: -12px; }
+  .site-footer__legal {
+    margin-top: var(--s-6);
+    padding-top: var(--s-5);
+    border-top: 1px solid var(--line);
+    display: grid;
+    gap: var(--s-2);
+    max-width: var(--measure);
+  }
+  .site-footer__legal :global(.riot-disclaimer) { font-size: inherit; }
+</style>

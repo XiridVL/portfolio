@@ -1,0 +1,109 @@
+---
+/**
+ * Proof figures in large tabular mono ("soundings"). Figures are real text.
+ *   variant="strip"  home #proof: figures sit on the horizon rule, in a row
+ *   variant="tiles"  case-study "By the numbers": bordered tiles in a grid
+ * The surrounding <section> and heading belong to the page.
+ */
+export interface SoundingItem {
+  figure: string;
+  caption: string;
+}
+interface Props {
+  items: SoundingItem[];
+  footnote?: string;
+  variant?: 'strip' | 'tiles';
+  class?: string;
+}
+const { items, footnote, variant = 'strip', class: className } = Astro.props;
+---
+
+<div class:list={['soundings', `soundings--${variant}`, className]}>
+  <ul role="list" class="soundings__list">
+    {
+      items.map((item) => (
+        <li class="soundings__item">
+          <span class="soundings__figure">{item.figure}</span>
+          <span class="soundings__caption">{item.caption}</span>
+        </li>
+      ))
+    }
+  </ul>
+  {footnote && <p class="soundings__footnote mono">{footnote}</p>}
+</div>
+
+<style>
+  .soundings__list { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--s-5); }
+  .soundings__item { display: flex; flex-direction: column; gap: var(--s-2); }
+  .soundings__figure {
+    font-family: var(--font-mono);
+    font-size: var(--step-5);
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .soundings__caption { color: var(--muted); font-size: var(--step--1); max-width: 26ch; }
+  .soundings__footnote { margin-top: var(--s-5); font-size: var(--step--2); color: var(--muted); }
+
+  /* strip: on the horizon rule. Each item carries its own segment of the rule
+     (no column gap), so every wrapped row still sits on a continuous line. */
+  /* Five figures without an orphan: 2+2+1 (last spans the row) on phones,
+     3+2 on tablets, one row of five from 1024px. */
+  .soundings--strip .soundings__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 0;
+    row-gap: var(--s-6);
+  }
+  .soundings--strip .soundings__item:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .soundings--strip .soundings__item:last-child:nth-child(odd) .soundings__caption { max-width: 34ch; }
+  @media (max-width: 639px) {
+    .soundings--strip .soundings__figure { font-size: 2rem; }
+  }
+  @media (min-width: 640px) {
+    .soundings--strip .soundings__list { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .soundings--strip .soundings__item { grid-column: span 2; }
+    .soundings--strip .soundings__item:nth-child(n + 4) { grid-column: span 3; }
+    .soundings--strip .soundings__item:last-child:nth-child(odd) { grid-column: span 3; }
+  }
+  @media (min-width: 1024px) {
+    .soundings--strip .soundings__list { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+    .soundings--strip .soundings__item,
+    .soundings--strip .soundings__item:nth-child(n + 4),
+    .soundings--strip .soundings__item:last-child:nth-child(odd) { grid-column: auto; }
+  }
+  .soundings--strip .soundings__item {
+    position: relative;
+    border-top: 1.5px solid var(--horizon);
+    padding-top: var(--s-5);
+    padding-inline-end: var(--s-5);
+  }
+  .soundings--strip .soundings__item::before {
+    content: "";
+    position: absolute;
+    top: -5.75px;
+    left: 0;
+    width: 1.5px;
+    height: 10px;
+    background: var(--horizon);
+  }
+
+  /* tiles: case-study numbers */
+  .soundings--tiles .soundings__list { grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: var(--s-3); }
+  /* Phones: two columns with smaller figures rather than a tall single column. */
+  @media (max-width: 479px) {
+    .soundings--tiles .soundings__list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-2); }
+    .soundings--tiles .soundings__item { padding: var(--s-4) var(--s-3); }
+    .soundings--tiles .soundings__figure { font-size: var(--step-3); }
+  }
+  .soundings--tiles .soundings__item {
+    padding: var(--s-5) var(--s-4);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-top: 1.5px solid var(--horizon);
+    border-radius: 0 0 var(--r-card) var(--r-card);
+  }
+  .soundings--tiles .soundings__figure { font-size: var(--step-4); }
+</style>

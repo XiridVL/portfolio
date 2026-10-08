@@ -1,0 +1,83 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Site address and base path come from repository variables
+# (Settings → Secrets and variables → Actions → Variables):
+#   SITE_URL   e.g. https://xiridvl.github.io or https://andreacapelli.dev
+#   BASE_PATH  '/' for a user site or custom domain, '/<repo>/' for a project site
+env:
+  SITE_URL: ${{ vars.SITE_URL || 'https://xiridvl.github.io' }}
+  BASE_PATH: ${{ vars.BASE_PATH || '/' }}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  # Never cancel a running deploy; superseded pull-request runs can stop early.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  quality:
+    name: Type check, compliance and Lighthouse
+    runs-on: ubuntu-latest
+    env:
+      # Lighthouse serves dist/ from the server root, so this build always uses '/'.
+      BASE_PATH: /
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Type check
+        run: npm run check
+      - name: Build
+        run: npm run build
+      - name: Compliance check (spec §17)
+        run: npm run check:compliance
+      - name: Link check
+        run: npm run check:links
+      - name: Lighthouse budgets
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          configPath: ./.github/lighthouse/lighthouserc.json
+          uploadArtifacts: true
+
+  build:
+    name: Build
+    needs: quality
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # Checks run on the exact build that ships (workflow-level SITE_URL and
+      # BASE_PATH), not only on the '/' build the quality job tests.
+      # package-manager is left to auto-detection so the npm cache keys on
+      # package-lock.json.
+      - name: Build, check and upload the Pages artifact
+        uses: withastro/action@v6
+        with:
+          build-cmd: npm run build && npm run check:links && npm run check:compliance
+
+  deploy:
+    name: Deploy
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
